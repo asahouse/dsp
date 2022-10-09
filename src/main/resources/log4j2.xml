@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="error">
+
+    <appenders>
+
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{DEFAULT} %-5level %class{36} %L %M - %msg%xEx%n"/>
+        </Console>
+
+        <RollingRandomAccessFile name="rollingLog" fileName="${web:rootDir}/WEB-INF/logs/system.log"
+                                 filePattern="${web:rootDir}/WEB-INF/logs/$${date:yyyy-MM}/history-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="%d{DEFAULT} %-5level %class{36} %L %M - %msg%xEx%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="20MB"/>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="14"/>
+        </RollingRandomAccessFile>
+
+    </appenders>
+
+    <loggers>
+        <root level="INFO">
+            <appender-ref ref="rollingLog"/>
+            <appender-ref ref="console"/>
+        </root>
+    </loggers>
+
+</configuration>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util" xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+       default-autowire="byName">
+
+    <bean id="qiniuAuth" class="com.qiniu.util.Auth" factory-method="create">
+        <constructor-arg name="accessKey" value="${qiniu.ak}"/>
+        <constructor-arg name="secretKey" value="${qiniu.sk}"/>
+    </bean>
+
+    <bean id="imagePolicyMap" class="com.qiniu.util.StringMap">
+        <constructor-arg name="map">
+            <util:map>
+                <entry key="insertOnly" value-type="java.lang.Integer" value="1"/>
+                <entry key="callbackFetchKey" value-type="java.lang.Integer" value="1"/>
+                <entry key="detectMime" value-type="java.lang.Integer" value="1"/>
+                <entry key="mimeLimit" value="image/jpeg;image/png;image/gif"/>
+                <entry key="fsizeLimit" value-type="java.lang.Integer" value="${qiniu.image.policy.fsizeLimit}"/>
+                <entry key="returnBody" value="${qiniu.image.policy.returnBody}"/>
+            </util:map>
+        </constructor-arg>
+    </bean>
+
+    <bean id="videoPolicyMap" class="com.qiniu.util.StringMap">
+        <constructor-arg name="map">
+            <util:map>
+                <entry key="insertOnly" value-type="java.lang.Integer" value="1"/>
+                <entry key="callbackFetchKey" value-type="java.lang.Integer" value="1"/>
+                <entry key="detectMime" value-type="java.lang.Integer" value="1"/>
+                <entry key="mimeLimit" value="video/mp4;video/x-flv"/>
+                <entry key="fsizeLimit" value-type="java.lang.Integer" value="${qiniu.video.policy.fsizeLimit}"/>
+                <entry key="returnBody" value="${qiniu.video.policy.returnBody}"/>
+            </util:map>
+        </constructor-arg>
+    </bean>
+
+</beans>

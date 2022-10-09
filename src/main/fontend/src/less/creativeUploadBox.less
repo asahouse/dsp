@@ -1,0 +1,218 @@
+.creative-upload-box{
+    width: 1000px;
+    height: 600px;
+    background-color: #F5F5F5;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-left: -500px;
+    margin-top: -300px;
+    overflow: hidden;
+    .left-cont, .right-cont{
+        height: 600px;
+        position: relative;
+    }
+    .left-cont{
+        padding-right: 0;
+    }
+    .right-cont{
+        padding-left: 0;
+    }
+    .box{
+        border-radius: 0;
+        .box-header{
+            padding:20px;
+            height: 61px;
+            .btn-box-tool{
+                padding: 0 10px;
+                font-size: 32px;
+                line-height: 1;
+                margin-top: 6px;
+                &:hover{
+                    background-color: #fff;
+                }
+            }
+        }
+        .box-body{
+            height: 485px;
+            padding:20px;
+            position: relative;
+            .help-block{
+                position: relative;
+            }
+        }
+        .box-footer{
+            min-height: 55px;
+            .btn{
+                margin-right: 10px;
+            }
+        }
+    }
+}
+
+#m-list-body{
+    position: relative;
+    overflow: hidden;
+}
+
+.popover{
+    left: -344px;
+    max-width: 700px;
+    border-radius: 0;
+    top: 18px;
+    .popover-content{
+        line-height: 1.6;
+        font-size: 12px;
+    }
+    p{
+        word-break: break-all;
+    }
+}
+.previewImg{
+    position: absolute;
+}
+
+.material-list{
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    &.lock{
+        li{
+            background-color: #f1f1f1;
+        }
+    }
+    li{
+        min-height: 100px;
+        position: relative;
+        border-bottom: 1px solid #f4f4f4;
+        padding: 10px 10px 10px 130px;
+        &.file-invalid{
+            cursor: default;
+            label:before{
+                background: #eee;
+            }
+            label:after{
+                display: block;
+            }
+        }
+        h4{
+            small{
+                position: relative;
+                top: 5px;
+            }
+        }
+        p{
+            margin-bottom: 0;
+        }
+        label{
+            position: absolute;
+            left: 10px;
+            top: 40%;
+        }
+        .img-thumb{
+            background-color: #d2d6de;
+            position: absolute;
+            left: 36px;
+            top: 10px;
+            overflow: hidden;
+            width: 80px;
+            height: 80px;
+            img{
+                display: block;
+                width: 100%;
+            }
+        }
+        .del-material{
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 12px;
+            border-radius: 50%;
+            opacity: 0.5;
+            -webkit-transition: opacity 0.5s, right 0.5s;
+            -moz-transition: opacity 0.5s, right 0.5s;
+            -ms-transition: opacity 0.5s, right 0.5s;
+            -o-transition: opacity 0.5s, right 0.5s;
+            transition: opacity 0.5s, right 0.5s;
+        }
+        &:hover, .hover{
+            background-color: #f1f1f1;
+            cursor: pointer;
+            .del-material{
+                opacity: 1;
+            }
+        }
+        &.has-error{
+            background-color: #fdece9;
+        }
+    }
+}
+
+.img-size-desc{
+    font-size: 12px;
+    color: #000;
+    text-align: left;
+    position: relative;
+    padding: 20px;
+    margin-top: 24px;
+    line-height: 1.6;
+    .title{
+        position: absolute;
+        font-size: 25px;
+        color: #ddd;
+        right: 10px;
+        top: 5px;
+    }
+}
+
+
+
+.no-material{
+    overflow: hidden;
+    position: absolute;
+    top: 61px;
+    left: 0;
+    right: 0;
+    bottom: 55px;
+    background-color: #fff;
+    z-index: 5;
+    .border-dash{
+        margin: 20px;
+        border: 3px dashed #e6e6e6;
+        padding: 50px 50px 30px 50px;
+        &>span{
+            display: inline-block;
+            color: #ccc;
+            font-size: 80px;
+        }
+    }
+    p{
+        margin-top: 12px;
+        color: #ccc;
+        font-size: 18px;
+    }
+}
+
+.question-circle{
+    position: relative;
+    .btn{
+        display: inline-block;
+        color: #f39c12;
+        text-align: center;
+    }
+    .popover{
+        top: -160px;
+        transform: translate(38%);
+    }
+}
+
+.field-invalid{
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    right: 0;
+    border-radius: 0;
+    opacity: 0.8;
+    padding: 8px;
+    font-size: 12px;
+}

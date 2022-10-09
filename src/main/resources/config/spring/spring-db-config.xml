@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+         http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd"
+       default-autowire="byName">
+
+    <!-- dataSource 在spring-profile.xml 中-->
+
+    <!-- 连接池错误日志filter 暂设定错误级输出-->
+    <bean id="log-filter" class="com.alibaba.druid.filter.logging.Log4jFilter">
+        <property name="connectionLogErrorEnabled" value="true" />
+        <property name="statementLogErrorEnabled" value="true" />
+        <property name="resultSetLogErrorEnabled" value="true" />
+        <!-- <property name="dataSourceLogEnabled" value="true" /> -->
+        <!-- <property name="statementExecutableSqlLogEnable" value="true" /> -->
+    </bean>
+    <!-- 连接池监控filter -->
+    <bean id="stat-filter" class="com.alibaba.druid.filter.stat.StatFilter">
+        <property name="slowSqlMillis" value="10000" />
+        <property name="logSlowSql" value="true" />
+        <property name="mergeSql" value="true" />
+    </bean>
+    <!-- 防御SQL注入攻击 -->
+    <bean id="wall-filter" class="com.alibaba.druid.wall.WallFilter">
+        <property name="dbType" value="mysql" />
+
+        <property name="logViolation" value="true" /><!-- 对疑似SQL注入输出日志信息 -->
+        <property name="throwException" value="false" /><!-- 对疑似SQL注入抛出SQLException -->
+    </bean>
+
+    <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="packagesToScan" value="org.codeworks.dsp.model"/>
+        <property name="jpaVendorAdapter">
+            <bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter"/>
+        </property>
+        <property name="jpaProperties">
+            <props>
+                <!-- ##########hibernate 基础参数########## -->
+                <!-- 一个Hibernate Dialect类名允许Hibernate针对特定的关系数据库生成优化的SQL. 取值 full.classname.of.Dialect;3.6版本无需设置并能自动检测 -->
+                <!-- DB2 方言<prop key="hibernate.dialect">org.hibernate.dialect.DB2Dialect</prop> -->
+                <!-- Oracle方言<prop key="hibernate.dialect">org.hibernate.dialect.OracleDialect</prop> -->
+                <!-- SQLServer方言<prop key="hibernate.dialect">org.hibernate.dialect.SQLServerDialect</prop> -->
+                <!-- MySQL方言  -->
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL57InnoDBDialect</prop>
+                <!-- 在生成的DB2 SQL中, 将给定的schema/tablespace附加于非全限定名的表名上. 取值 SCHEMA_NAME
+                    <prop key="hibernate.default_schema>db2admin</prop> -->
+                <!-- 在生成的SQL中, 将给定的catalog附加于非全限定名的表名上. 取值 CATALOG_NAME <prop key="hibernate.default_catalog></prop> -->
+                <!-- SessionFactory创建后，将自动使用这个名字绑定到JNDI中. 取值 jndi/composite/name <prop
+                    key="hibernate.session_factory_name"></prop> -->
+                <!-- 为单向关联(一对一, 多对一)的外连接抓取（outer join fetch）树设置最大深度. 值为0意味着将关闭默认的外连接抓取.
+                    取值 建议在0到3之间取值 -->
+                <prop key="hibernate.max_fetch_depth">0</prop>
+                <!-- 为Hibernate关联的批量抓取设置默认数量. 取值 建议的取值为4, 8, 和16 <prop key="hibernate.default_batch_fetch_size"></prop> -->
+                <!-- 为由这个SessionFactory打开的所有Session指定默认的实体表现模式. 取值 dynamic-map, dom4j,
+                    pojo <prop key="hibernate.default_entity_mode"></prop> -->
+                <!-- 强制Hibernate按照被更新数据的主键，为SQL更新排序。这么做将减少在高并发系统中事务的死锁。 取值 true | false -->
+                <prop key="hibernate.order_updates">true</prop>
+                <!-- 如果开启, 在对象被删除时生成的标识属性将被重设为默认值. 取值 true | false <prop key="hibernate.use_identifer_rollback"></prop> -->
+                <!-- 为"当前" Session指定一个(自定义的)策略。eg. jta | thread | custom.Class(spring环境下由spring管理)
+                    <prop key="current_session_context_class"></prop> -->
+                <!-- 选择HQL解析器的实现. 取值 org.hibernate.hql.ast.ASTQueryTranslatorFactory
+                    or org.hibernate.hql.classic.ClassicQueryTranslatorFactory <prop key="hibernate.query.factory_class"></prop> -->
+                <!-- 将Hibernate查询中的符号映射到SQL查询中的符号 (符号可能是函数名或常量名字). 取值 hqlLiteral=SQL_LITERAL,
+                    hqlFunction=SQLFUNC <prop key="hibernate.query.substitutions"></prop> -->
+                <!-- 开启CGLIB来替代运行时反射机制(系统级属性). 反射机制有时在除错时比较有用. 注意即使关闭这个优化, Hibernate还是需要CGLIB.
+                    你不能在hibernate.cfg.xml中设置此属性. 取值 true | false <prop key="hibernate.cglib.use_reflection_optimizer"></prop> -->
+                <!-- ##########Hibernate JDBC和连接(connection)属性########## -->
+                <!-- 非零值，指定JDBC抓取数量的大小 (调用Statement.setFetchSize()) <prop key="hibernate.jdbc.fetch_size"></prop> -->
+                <!-- 非零值，允许Hibernate使用JDBC2的批量更新. 取值 建议取5到30之间的值 -->
+                <prop key="hibernate.jdbc.batch_size">30</prop>
+                <!-- 如果你想让你的JDBC驱动从executeBatch()返回正确的行计数 , 那么将此属性设为true(开启这个选项通常是安全的).
+                    同时，Hibernate将为自动版本化的数据使用批量DML. 默认值为false. eg. true | false <prop key="hibernate.jdbc.batch_versioned_data"></prop> -->
+                <!-- 选择一个自定义的Batcher. 多数应用程序不需要这个配置属性. eg. classname.of.Batcher <prop
+                    key="hibernate.jdbc.factory_class"></prop> -->
+                <!-- 允许Hibernate使用JDBC2的可滚动结果集. 只有在使用用户提供的JDBC连接时，这个选项才是必要的, 否则Hibernate会使用连接的元数据.
+                    取值 true | false <prop key="hibernate.jdbc.use_scrollable_resultset"></prop> -->
+                <!-- 在JDBC读写binary (二进制)或serializable (可序列化) 的类型时使用流(stream)(系统级属性).
+                    取值 true | false <prop key="hibernate.jdbc.use_streams_for_binary"></prop> -->
+                <!-- 在数据插入数据库之后，允许使用JDBC3 PreparedStatement.getGeneratedKeys() 来获取数据库生成的key(键)。需要JDBC3+驱动和JRE1.4+,
+                    如果你的数据库驱动在使用Hibernate的标 识生成器时遇到问题，请将此值设为false. 默认情况下将使用连接的元数据来判定驱动的能力. 取值
+                    true|false <prop key="hibernate.jdbc.use_get_generated_keys"></prop> -->
+                <!-- 自定义ConnectionProvider的类名, 此类用来向Hibernate提供JDBC连接. 取值 classname.of.ConnectionProvider
+                    <prop key="hibernate.connection.provider_class"></prop> -->
+                <!-- 设置JDBC事务隔离级别. 查看java.sql.Connection来了解各个值的具体意义, 但请注意多数数据库都不支持所有的隔离级别.
+                    取值 1, 2, 4, 8 <prop key="hibernate.connection.isolation"></prop> -->
+                <!-- 允许被缓存的JDBC连接开启自动提交(autocommit) (不建议). 取值 true | false -->
+                <prop key="hibernate.connection.autocommit">false</prop>
+                <!-- 指定Hibernate在何时释放JDBC连接. 默认情况下,直到Session被显式关闭或被断开连接时,才会释放JDBC连接.
+                    对于应用程序服务器的JTA数据源, 你应当使用after_statement, 这样在每次JDBC调用后，都会主动的释放连接. 对于非JTA的连接,
+                    使用after_transaction在每个事务结束时释放连接是合理的. auto将为JTA和CMT事务策略选择after_statement,
+                    为JDBC事务策略选择after_transaction. 取值 on_close | after_transaction | after_statement
+                    | auto <prop key="hibernate.connection.release_mode"></prop> -->
+                <!-- 将JDBC属性propertyName传递到DriverManager.getConnection()中去 <prop key="hibernate.connection.<propertyName>"></prop> -->
+                <!-- 将属性propertyName传递到JNDI InitialContextFactory中去 <prop key="hibernate.jndi.<propertyName>"></prop> -->
+                <!-- ##########Hibernate缓存属性########## -->
+                <!-- 自定义的CacheProvider的类名. 取值 classname.of.CacheProvider <prop key="hibernate.cache.provider_class"></prop> -->
+                <!-- 以频繁的读操作为代价, 优化二级缓存来最小化写操作. 在Hibernate3中，这个设置对的集群缓存非常有用, 对集群缓存的实现而言，默认是开启的.
+                    取值 true|false <prop key="hibernate.cache.use_minimal_puts"></prop> -->
+                <!-- 允许查询缓存, 个别查询仍然需要被设置为可缓存的. 取值 true|false -->
+                <!--<prop key="hibernate.cache.use_query_cache">true</prop>-->
+                <!-- 能用来完全禁止使用二级缓存. 对那些在类的映射定义中指定<cache>的类，会默认开启二级缓存. 取值 true|false -->
+                <!--<prop key="hibernate.cache.use_second_level_cache">false</prop>-->
+                <!-- 自定义实现QueryCache接口的类名, 默认为内建的StandardQueryCache. 取值 classname.of.QueryCache
+                    <prop key="hibernate.cache.query_cache_factory"></prop> -->
+                <!-- 二级缓存区域名的前缀. 取值 prefix <prop key="hibernate.cache.region_prefix"></prop> -->
+                <!-- 强制Hibernate以更人性化的格式将数据存入二级缓存 -->
+                <!--<prop key="hibernate.cache.use_structured_entries">true</prop>-->
+                <!-- 配置二级缓存 <prop key="hibernate.cache.provider_class">org.hibernate.cache.SingletonEhCacheProvider</prop> -->
+                <!-- 指定二级缓存的配置文件位置 <prop key="hibernate.cache.provider_configuration">/config/ehcache-hibernate.xml</prop> -->
+                <!-- 自定义的CacheRegionFactory的类名. 取值 classname.of.CacheRegionFactory(替换CacheProvider) -->
+                <!-- 静态数据源办<prop key="hibernate.cache.region.factory_class">net.sf.ehcache.hibernate.EhCacheRegionFactory</prop> -->
+                <!-- 动态数据源版本 -->
+                <!--<prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.EhCacheRegionFactory</prop>-->
+                <!-- 指定二级缓存的配置文件位置 -->
+                <!--<prop key="net.sf.ehcache.configurationResourceName">config/cache/ehcache-hibernate.xml</prop>-->
+                <!-- ##########Hibernate开发调试设置########## -->
+                <!-- 生产环境免用参数（设置为false） -->
+                <!-- 输出所有SQL语句到控制台. 有一个另外的选择是把org.hibernate.SQL这个log category设为debug。
+                    eg. true | false -->
+                <prop key="hibernate.show_sql">true</prop>
+                <!-- 在log和console中打印出更漂亮的SQL。 取值 true | false -->
+                <prop key="hibernate.format_sql">true</prop>
+                <!-- 如果开启, Hibernate将收集有助于性能调节的统计数据. 取值 true | false -->
+                <prop key="hibernate.generate_statistics">false</prop>
+                <!-- 生成调试的注释信息 -->
+                <prop key="hibernate.use_sql_comments">false</prop>
+                <!-- 在SessionFactory创建时，自动检查数据库结构，或者将数据库schema的DDL导出到数据库. 使用 create-drop时,在显式关闭SessionFactory时，将drop掉数据库schema.
+                    取值 validate | update | create | create-drop <prop key="hibernate.hbm2ddl.auto"></prop> -->
+                <!--如果你的项目都是注解，此时就没必要扫描hbm了，禁用掉-->
+                <!--<prop key="hibernate.archive.autodetection">class</prop>-->
+            </props>
+        </property>
+    </bean>
+
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory"/>
+    </bean>
+
+    <tx:advice id="transactionManagerAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="get*" read-only="true" propagation="SUPPORTS"/>
+            <tx:method name="create*" read-only="false" propagation="REQUIRED"
+                       rollback-for="java.lang.Throwable"/>
+            <tx:method name="update*" read-only="false" propagation="REQUIRED"
+                       rollback-for="java.lang.Throwable"/>
+            <tx:method name="delete*" read-only="false" propagation="REQUIRED"
+                       rollback-for="java.lang.Throwable"/>
+            <tx:method name="schedule*" read-only="false" propagation="REQUIRED"
+                       rollback-for="java.lang.Throwable"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <aop:config>
+        <!-- execution(modifiers-pattern? ret-type-pattern declaring-type-pattern?
+            name-pattern(param-pattern) throws-pattern?) -->
+        <aop:pointcut
+                expression="execution(* org.codeworks.dsp.service.impl.*.*(..)))"
+                id="transactionManagerAdvicePointcut"/>
+        <!-- 由于部分程序可能要控制在事务执行前后操作，所以要定义一个order值，方便控制 -->
+        <aop:advisor order="10000" advice-ref="transactionManagerAdvice"
+                     pointcut-ref="transactionManagerAdvicePointcut"/>
+    </aop:config>
+
+    <!-- 注解事务 -->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+</beans>

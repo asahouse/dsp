@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd"
+       default-autowire="byName">
+
+    <bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+        <property name="hostName" value="${session.redis.host}"/>
+        <property name="port" value="${session.redis.port}"/>
+        <property name="database" value="${session.redis.db}"/>
+        <property name="usePool" value="true"/>
+        <property name="poolConfig">
+            <bean class="redis.clients.jedis.JedisPoolConfig">
+                <property name="maxTotal" value="${session.redis.pool.maxTotal}"/>
+                <property name="maxIdle" value="${session.redis.pool.maxIdle}"/>
+                <property name="minIdle" value="${session.redis.pool.minIdle}"/>
+                <property name="maxWaitMillis" value="${session.redis.pool.maxWaitMillis}"/>
+                <property name="timeBetweenEvictionRunsMillis"
+                          value="${session.redis.pool.timeBetweenEvictionRunsMillis}"/>
+            </bean>
+        </property>
+    </bean>
+
+    <bean id="stringRedisTemplate" class="org.springframework.data.redis.core.StringRedisTemplate">
+        <property name="connectionFactory" ref="jedisConnectionFactory"/>
+    </bean>
+
+</beans>

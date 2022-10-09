@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- 本地模式 tomcat 使用启动参数 -Dspring.profiles.active="development" -->
+    <beans profile="development">
+        <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+            <!--
+            <property name="url" value="${jdbc.url}"/>
+            <property name="username" value="${jdbc.username}"/>
+            <property name="password" value="${jdbc.password}"/>
+            -->
+            <!--<property name="url" value="jdbc:mysql://localhost:3306/dsp?useUnicode=true&amp;characterEncoding=UTF-8"/>-->
+            <property name="url" value="jdbc:mysql://10.76.179.81:3306/dsp?useUnicode=true&amp;characterEncoding=UTF-8"/>
+            <property name="username" value="dsp-user"/>
+            <property name="password" value="evue8SrsyPgM1aS2"/>
+
+            <property name="maxActive" value="20"/>
+            <property name="initialSize" value="10"/>
+            <property name="maxWait" value="60000"/>
+            <property name="minIdle" value="10"/>
+
+            <property name="timeBetweenEvictionRunsMillis" value="60000"/>
+            <property name="minEvictableIdleTimeMillis" value="300000"/>
+
+            <property name="testWhileIdle" value="true"/>
+            <property name="testOnBorrow" value="false"/>
+            <property name="testOnReturn" value="false"/>
+
+            <property name="poolPreparedStatements" value="true"/>
+            <property name="maxOpenPreparedStatements" value="20"/>
+
+            <!-- 连接泄露侦测 -->
+            <property name="removeAbandoned" value="true" /> <!-- 打开removeAbandoned功能 -->
+            <property name="removeAbandonedTimeout" value="900" /> <!-- 900秒，也就是15分钟 -->
+            <property name="logAbandoned" value="true" /> <!-- 关闭abanded连接时输出错误日志 -->
+
+            <!-- Druid监控 -->
+            <property name="proxyFilters">
+                <list>
+                    <ref bean="stat-filter" />
+                    <ref bean="log-filter"/>
+                    <ref bean="wall-filter"/>
+                </list>
+            </property>
+        </bean>
+
+        <bean id="rtbConstant" class="org.codeworks.dsp.rtbCall.RtbConstant">
+            <property name="serverUrl" value="http://10.76.179.81:8090"/>
+            <!--<property name="serverUrl" value="http://60.205.152.62:8090"/>-->
+        </bean>
+    </beans>
+
+    <beans profile="local">
+        <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+            <property name="url" value="jdbc:mysql://localhost:3306/dsp?useUnicode=true&amp;characterEncoding=UTF-8"/>
+            <property name="username" value="dsp-user"/>
+            <property name="password" value="evue8SrsyPgM1aS2"/>
+
+            <property name="maxActive" value="20"/>
+            <property name="initialSize" value="10"/>
+            <property name="maxWait" value="60000"/>
+            <property name="minIdle" value="10"/>
+
+            <property name="timeBetweenEvictionRunsMillis" value="60000"/>
+            <property name="minEvictableIdleTimeMillis" value="300000"/>
+
+            <property name="testWhileIdle" value="true"/>
+            <property name="testOnBorrow" value="false"/>
+            <property name="testOnReturn" value="false"/>
+
+            <property name="poolPreparedStatements" value="true"/>
+            <property name="maxOpenPreparedStatements" value="20"/>
+
+            <!-- 连接泄露侦测 -->
+            <property name="removeAbandoned" value="true" /> <!-- 打开removeAbandoned功能 -->
+            <property name="removeAbandonedTimeout" value="900" /> <!-- 900秒，也就是15分钟 -->
+            <property name="logAbandoned" value="true" /> <!-- 关闭abanded连接时输出错误日志 -->
+
+            <!-- Druid监控 -->
+            <property name="proxyFilters">
+                <list>
+                    <ref bean="stat-filter" />
+                    <ref bean="log-filter"/>
+                    <ref bean="wall-filter"/>
+                </list>
+            </property>
+        </bean>
+
+        <bean id="rtbConstant" class="org.codeworks.dsp.rtbCall.RtbConstant">
+            <property name="serverUrl" value="http://10.76.179.81:8090"/>
+        </bean>
+    </beans>
+
+    <!-- 服务器环境 -->
+    <beans profile="production">
+        <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+            <!--<property name="url" value="jdbc:mysql://10.76.179.81:3306/dsp?useUnicode=true&amp;characterEncoding=UTF-8"/>-->
+            <!--<property name="username" value="dsp-user"/>-->
+            <!--<property name="password" value="evue8SrsyPgM1aS2"/>-->
+
+            <property name="url" value="jdbc:mysql://mysql.rdsm267g5wrop3z.rds.bj.baidubce.com:3306/dsp?useUnicode=true&amp;characterEncoding=UTF-8"/>
+            <property name="username" value="dsp_user"/>
+            <property name="password" value="evue8SrsyPgM1aS2"/>
+
+            <property name="maxActive" value="20"/>
+            <property name="initialSize" value="10"/>
+            <property name="maxWait" value="60000"/>
+            <property name="minIdle" value="10"/>
+
+            <property name="timeBetweenEvictionRunsMillis" value="60000"/>
+            <property name="minEvictableIdleTimeMillis" value="300000"/>
+
+            <property name="testWhileIdle" value="true"/>
+            <property name="testOnBorrow" value="false"/>
+            <property name="testOnReturn" value="false"/>
+
+            <property name="poolPreparedStatements" value="true"/>
+            <property name="maxOpenPreparedStatements" value="20"/>
+
+            <!-- 连接泄露侦测 -->
+            <property name="removeAbandoned" value="false" /> <!-- 打开removeAbandoned功能 -->
+            <property name="removeAbandonedTimeout" value="900" /> <!-- 900秒，也就是15分钟 -->
+            <property name="logAbandoned" value="true" /> <!-- 关闭abanded连接时输出错误日志 -->
+
+            <!-- Druid监控 -->
+            <property name="proxyFilters">
+                <list>
+                    <ref bean="stat-filter" />
+                    <ref bean="log-filter"/>
+                    <ref bean="wall-filter"/>
+                </list>
+            </property>
+        </bean>
+
+        <bean id="rtbConstant" class="org.codeworks.dsp.rtbCall.RtbConstant">
+            <property name="serverUrl" value="http://192.168.0.2:8080"/>
+        </bean>
+    </beans>
+
+
+</beans>

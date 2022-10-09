@@ -1,0 +1,114 @@
+.box{
+    .box-header{
+        min-height: 40px;
+    }
+    .box-tools{
+        position: relative;
+        right: 0;
+        top: 0;
+        .input-group-sm{
+            width: 300px;
+            margin-right: 5px;
+        }
+        input{
+            position: relative;
+            z-index: 1;
+
+        }
+        .reset{
+            position: absolute;
+            z-index:2;
+            top: 5px;
+            right: 42px;
+            padding: 1px 5px;
+            &:hover{
+                background-color: #eee;
+            }
+        }
+        .search_preview{
+            position: absolute;
+            left: 0;
+            width: 100%;
+            top: 30px;
+            background-color: #fff;
+            z-index:9999;
+            opacity: 0.95;
+            li{
+                cursor: pointer;
+                border-radius: 0;
+                padding:5px 10px;
+                &:hover{
+                    background-color: #eee;
+                }
+            }
+        }
+    }
+    .pagination{
+        margin: 0;
+    }
+    .desc{
+        .order-icon{
+            i{
+                &.ion-ios-arrow-up{
+                    display: none!important;
+                }
+            }
+        }
+    }
+    .asc{
+        .order-icon{
+            i{
+                &.ion-ios-arrow-down{
+                    display: none!important;
+                }
+            }
+        }
+    }
+    table{
+        tr{
+            th{
+                .th-inner{
+                    &.sortable{
+                        position: relative;
+                        padding-right: 12px;
+                        cursor: pointer;
+                        .order-icon{
+                            display: inline-block;
+                            position: absolute;
+                            right: 0;
+                            top: 0;
+                            height: 20px;
+                            width: 9px;
+                            i{
+                                position: absolute;
+                                left: 0;
+                                &.ion-ios-arrow-up{
+                                    top: -4px;
+                                }
+                                &.ion-ios-arrow-down{
+                                    bottom: -4px;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            td{
+                &.editable{
+                    cursor: pointer;
+                    position: relative;
+                    .popover{
+                        top:-56px;
+                        left:50%;
+                        width: 280px;
+                        max-width: 280px;
+                        margin-left:-280/2px;
+                        &.open{
+                            display: block;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

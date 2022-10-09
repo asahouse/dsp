@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+       http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit.xsd"
+       default-autowire="byName">
+
+    <rabbit:annotation-driven/>
+
+    <bean id="rabbitListenerContainerFactory"
+          class="org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory">
+        <property name="connectionFactory" ref="connectionFactory"/>
+        <property name="concurrentConsumers" value="3"/>
+        <property name="maxConcurrentConsumers" value="10"/>
+    </bean>
+
+    <rabbit:connection-factory id="connectionFactory"
+                               host="${rabbitmq.host}"
+                               port="${rabbitmq.port}"
+                               username="${rabbitmq.username}"
+                               password="${rabbitmq.password}"
+                               virtual-host="${rabbitmq.virtualhost}"/>
+
+    <rabbit:template id="amqpTemplate"
+                     connection-factory="connectionFactory"/>
+
+    <rabbit:admin connection-factory="connectionFactory"/>
+
+    <rabbit:queue id="syncCampaignQueue" name="syncCampaignQueue" auto-declare="true" auto-delete="false"
+                  durable="true"/>
+
+    <rabbit:queue id="campaign.publish" name="campaign.publish" auto-declare="true" auto-delete="false"
+                  durable="true"/>
+
+    <rabbit:queue id="campaign.log" name="campaign.log" auto-declare="true" auto-delete="false"
+                  durable="true"/>
+
+    <rabbit:fanout-exchange auto-declare="true" name="syncCampaignExchange" id="fanoutExchange">
+        <rabbit:bindings>
+            <rabbit:binding queue="syncCampaignQueue"/>
+        </rabbit:bindings>
+    </rabbit:fanout-exchange>
+
+    <!--<rabbit:fanout-exchange durable="true" auto-declare="true" name="campaign" id="campaignFanout">-->
+    <!--<rabbit:bindings>-->
+    <!--<rabbit:binding queue="campaign.publish"/>-->
+    <!--<rabbit:binding queue="campaign.log"/>-->
+    <!--</rabbit:bindings>-->
+    <!--</rabbit:fanout-exchange>-->
+
+</beans>
