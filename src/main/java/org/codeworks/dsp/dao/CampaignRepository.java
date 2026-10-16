@@ -24,9 +24,18 @@ public interface CampaignRepository extends
 
     List<Campaign> findByStartDateBeforeAndEndDateAfterAndSync(LocalDate nowOne, LocalDate nowTwo, Integer sync);
 
+    @org.springframework.data.jpa.repository.Query("select c from Campaign c where c.startDate <= ?1 and c.endDate >= ?2 and c.sync = ?3")
+    List<Campaign> findActiveCampaignsOnDate(LocalDate startLimit, LocalDate endLimit, Integer sync);
+
+    @org.springframework.data.jpa.repository.Query("select c from Campaign c where c.startDate <= ?1 and c.endDate >= ?2 and c.status = 0 and c.review = 0")
+    List<Campaign> findActiveCampaignsWithinDate(LocalDate startLimit, LocalDate endLimit);
+
     @EntityGraph(value = "campaign.all", type = EntityGraph.EntityGraphType.FETCH)
     Optional<Campaign> findWithAllByIdAndAdvertiserId(Integer id, Integer advId);
 
     Long countByIdIn(List<Integer> ids);
+
+    @org.springframework.data.jpa.repository.Query("select c from Campaign c where c.endDate < ?1 and c.sync = ?2")
+    List<Campaign> findExpiredCampaigns(LocalDate date, Integer sync);
 
 }

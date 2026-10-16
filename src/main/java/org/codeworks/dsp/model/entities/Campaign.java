@@ -51,12 +51,12 @@ public class Campaign extends BaseEntity implements Serializable {
     @JsonView(ListView.class)
     @NotNull(groups = {Create.class, Update.class})
     @Column(name = "bid", nullable = false, precision = 2)
-    private Float bid;
+    private Double bid;
 
     @JsonView(ListView.class)
     @NotNull(groups = {Create.class, Update.class})
     @Column(name = "budget", nullable = false, precision = 2)
-    private Float budget;
+    private Double budget;
 
     @JsonView(ListView.class)
     @NotNull(groups = {Create.class, Update.class})
@@ -147,19 +147,19 @@ public class Campaign extends BaseEntity implements Serializable {
         this.review = review.toValue();
     }
 
-    public Float getBid() {
+    public Double getBid() {
         return bid;
     }
 
-    public void setBid(Float bid) {
+    public void setBid(Double bid) {
         this.bid = bid;
     }
 
-    public Float getBudget() {
+    public Double getBudget() {
         return budget;
     }
 
-    public void setBudget(Float budget) {
+    public void setBudget(Double budget) {
         this.budget = budget;
     }
 

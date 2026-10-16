@@ -22,15 +22,15 @@ public class CampaignObjective extends BaseEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "campaignId", nullable = false, unique = true)
+    @Column(name = "campaignId", nullable = false)
     private Integer campaignId;
 
     @JsonView(EditView.class)
-    @Column(name = "categoryTagCode", nullable = false, unique = true)
+    @Column(name = "categoryTagCode", nullable = false)
     private String categoryTagCode;
 
     @JsonView(EditView.class)
-    @Column(name = "categoryDictionaryId", nullable = false, unique = true)
+    @Column(name = "categoryDictionaryId", nullable = false)
     private String categoryDictionaryId;
 
     @Transient

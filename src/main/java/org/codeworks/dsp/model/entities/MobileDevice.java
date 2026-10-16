@@ -61,8 +61,12 @@ public class MobileDevice implements Serializable {
     public void addCarrier(Carrier carrier) {
         if (StringUtils.isEmpty(this.carrier))
             this.carrier = carrier.toValue().toString();
-        else
-            this.carrier += carrier.toValue().toString();
+        else {
+            Set<Carrier> carriers = getCarrier();
+            if (!carriers.contains(carrier)) {
+                this.carrier += "," + carrier.toValue().toString();
+            }
+        }
     }
 
     public Set<NetworkType> getNetworkType() {
@@ -81,8 +85,12 @@ public class MobileDevice implements Serializable {
     public void addNetworkType(NetworkType networkType) {
         if (StringUtils.isEmpty(this.networkType))
             this.networkType = networkType.toValue().toString();
-        else
-            this.networkType += networkType.toValue().toString();
+        else {
+            Set<NetworkType> types = getNetworkType();
+            if (!types.contains(networkType)) {
+                this.networkType += "," + networkType.toValue().toString();
+            }
+        }
     }
 
     public Set<Os> getOs() {
@@ -101,8 +109,12 @@ public class MobileDevice implements Serializable {
     public void addOs(Os os) {
         if (StringUtils.isEmpty(this.os))
             this.os = os.toValue().toString();
-        else
-            this.os += os.toValue().toString();
+        else {
+            Set<Os> osSet = getOs();
+            if (!osSet.contains(os)) {
+                this.os += "," + os.toValue().toString();
+            }
+        }
     }
 
     public enum Carrier {

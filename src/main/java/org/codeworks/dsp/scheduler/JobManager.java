@@ -70,7 +70,7 @@ public class JobManager {
         jobForSendAdvertiserToAdx.setJobName("send_advertiser_adx");
         jobForSendAdvertiserToAdx.setJobGroup("adx");
         jobForSendAdvertiserToAdx.setClassName("JobForSendAdvertiserToAdx");
-        jobForSendAdvertiserToAdx.setCronExpression("0/10 * * * * ?");
+        jobForSendAdvertiserToAdx.setCronExpression("0 0/5 * * * ?");
         jobs.add(jobForSendAdvertiserToAdx);
 
 //        ScheduleJob jobForBaiduOverviewGetTimeTrendRpt = new ScheduleJob();

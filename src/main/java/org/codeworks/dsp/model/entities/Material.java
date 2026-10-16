@@ -103,10 +103,61 @@ public class Material extends BaseEntity implements Serializable {
     @JoinColumn(name = "campaignId", nullable = false)
     private Campaign campaign;
 
+    @JsonView(ListView.class)
+    @Column(name = "admTemplate", length = 4000)
+    private String admTemplate;
+
+    @JsonView(ListView.class)
+    @Column(name = "adDomain", length = 100)
+    private String adDomain;
+
+    @JsonView(ListView.class)
+    @Column(name = "cpmPrice")
+    private Double cpmPrice;
+
+    @JsonView(ListView.class)
+    @Column(name = "creativeType", length = 20)
+    private String creativeType;
+
     public Material() {}
 
     public Material (Integer id){
         this.id = id;
+    }
+
+    public String getAdmTemplate() { return admTemplate; }
+    public void setAdmTemplate(String admTemplate) { this.admTemplate = admTemplate; }
+
+    public String getAdDomain() { return adDomain; }
+    public void setAdDomain(String adDomain) { this.adDomain = adDomain; }
+
+    public Double getCpmPrice() { return cpmPrice; }
+    public void setCpmPrice(Double cpmPrice) { this.cpmPrice = cpmPrice; }
+
+    public String getCreativeType() { return creativeType; }
+    public void setCreativeType(String creativeType) { this.creativeType = creativeType; }
+
+    public String renderAdm(String auctionPrice, String bidId, String winUrl) {
+        if (this.admTemplate != null && !this.admTemplate.trim().isEmpty()) {
+            String rendered = this.admTemplate;
+            if (auctionPrice != null) rendered = rendered.replace("${AUCTION_PRICE}", auctionPrice);
+            if (bidId != null) rendered = rendered.replace("${AUCTION_BID_ID}", bidId);
+            return rendered;
+        }
+        String click = (this.landingUrl != null) ? this.landingUrl : "#";
+        String img = (this.url != null) ? this.url : "";
+        int w = (this.width != null) ? this.width : 300;
+        int h = (this.height != null) ? this.height : 250;
+        StringBuilder sb = new StringBuilder();
+        sb.append("<div style=\"width:").append(w).append("px;height:").append(h).append("px;position:relative;display:inline-block;\">");
+        sb.append("<a href=\"").append(click).append("\" target=\"_blank\">");
+        sb.append("<img src=\"").append(img).append("\" width=\"").append(w).append("\" height=\"").append(h).append("\" border=\"0\"/>");
+        sb.append("</a>");
+        if (winUrl != null) {
+            sb.append("<img src=\"").append(winUrl).append("\" width=\"1\" height=\"1\" style=\"display:none;\"/>");
+        }
+        sb.append("</div>");
+        return sb.toString();
     }
 
     public Integer getId() {

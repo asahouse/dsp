@@ -9,6 +9,8 @@
     <context:component-scan base-package="org.codeworks.dsp">
         <context:exclude-filter type="annotation"
                                 expression="org.springframework.stereotype.Controller"></context:exclude-filter>
+        <context:exclude-filter type="regex"
+                                expression="org\.codeworks\.dsp\.config\..*"/>
     </context:component-scan>
 
     <context:annotation-config/>
@@ -40,11 +42,11 @@
 
     <import resource="spring-data-jpa.xml"/>
 
-    <!--<import resource="spring-redis.xml"/>-->
+    <import resource="spring-redis.xml"/>
 
-    <!--<import resource="spring-session.xml"/>-->
+    <import resource="spring-session.xml"/>
 
-    <!--<import resource="spring-rabbitmq.xml"/>-->
+    <import resource="spring-rabbitmq.xml"/>
 
     <import resource="spring-qiniu.xml"/>
 

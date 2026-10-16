@@ -116,7 +116,7 @@ public class MaterialForRtbInterceptor {
         //同步状态(暂无)
         //百度审核状态
         return materials.stream()
-                .filter(m -> !Optional.ofNullable(m.getCampaign()).isPresent())
+                .filter(m -> Optional.ofNullable(m.getCampaign()).isPresent())
                 //.filter(m -> m.getStatus().equals(Material.Status.eligible))
                 //.filter(m -> m.getSync().equals(Material.Sync.not))
                 .filter(m -> m.getReview().equals(Material.Review.eligible))

@@ -32,7 +32,7 @@ public class CategoryDictionary extends BaseEntity implements Serializable {
 
 
     @NotNull(groups = {Create.class, Update.class})
-    @Column(name = "categoryId", nullable = false, unique = true)
+    @Column(name = "categoryId", nullable = false)
     private Integer categoryId;
 
 //    @ManyToOne(fetch = FetchType.LAZY)
@@ -41,11 +41,11 @@ public class CategoryDictionary extends BaseEntity implements Serializable {
 
 
     @NotNull(groups = {Create.class, Update.class})
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private Integer categoryParentId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "categoryTagCode", referencedColumnName = "tagCode", nullable = false, unique = true)
+    @JoinColumn(name = "categoryTagCode", referencedColumnName = "tagCode", nullable = false)
     private CategoryTag categoryTag;
 
     @JsonView(ListView.class)

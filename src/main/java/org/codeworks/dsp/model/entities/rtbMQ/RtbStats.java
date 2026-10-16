@@ -21,7 +21,7 @@ public class RtbStats extends BaseRtbEntity {
     @Column(name = "parseError")
     private Integer parseError;
 
-    @Column(name = "drop")
+    @Column(name = "`drop`")
     private Integer drop;
 
     @Column(name = "noMatch")

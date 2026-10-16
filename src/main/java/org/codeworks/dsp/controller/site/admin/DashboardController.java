@@ -10,6 +10,8 @@ import org.codeworks.dsp.service.AdvertiserService;
 import org.codeworks.dsp.service.BesApiService;
 import org.codeworks.dsp.service.CampaignService;
 import org.codeworks.dsp.service.RtbDataService;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
@@ -30,8 +32,14 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Created by benjaminkc on 16/12/2.
+ * 管理员工作台 Dashboard 聚合看板接口
+ * <p>
+ * 聚合全平台广告主总量、活动总量、今日新增活动数、近 3 天外部消耗、近 7 天曝光/点击与花费趋势。
+ * </p>
+ *
+ * @author benjaminkc
  */
+@Api(tags = "管理员工作台大盘接口", description = "提供系统概览看板数据，包括核心指标、近7天消耗及投放趋势")
 @RequestMapping("/v2/admin/dashboard")
 @RestController("/v2/admin/DashboardController")
 public class DashboardController extends AbstractController {
@@ -48,8 +56,14 @@ public class DashboardController extends AbstractController {
     @Autowired
     private RtbDataService rtbDataService;
 
+    /**
+     * 获取管理工作台核心指标看板数据
+     *
+     * @return 包含广告主总量、活动总数、当日活动数、消耗统计与曝光/点击趋势的数据对象
+     */
+    @ApiOperation(value = "获取工作台看板指标", notes = "聚合全平台广告主数、活动数、近3天消耗及近7日曝光/点击/花费趋势统计")
     @GetMapping
-    public Response dashboardInfos(){
+    public Response dashboardInfos() {
 
         //目前广告主总量
         Long totalAdv = advService.countAll();

@@ -28,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static org.codeworks.dsp.model.entities.QCategoryDictionary.categoryDictionary;
@@ -39,7 +40,7 @@ import static org.codeworks.dsp.model.entities.QCategoryTag.categoryTag;
 @Service
 public class CategoryServiceImpl implements CategoryService {
 
-    private static Map<String, List<CategoryTree>> alls = new HashMap<>();
+    private static final Map<String, List<CategoryTree>> alls = new ConcurrentHashMap<>();
 
     @Autowired
     private CategoryDictionaryRepository dicRepo;
@@ -72,13 +73,21 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void createCategoryDictionary(CategoryDictionary categoryDictionary) {
         dicRepo.save(categoryDictionary);
+        alls.clear();
     }
 
     @Override
     public void updateCategoryDictionary(CategoryDictionary categoryDictionary) {
         Optional<CategoryDictionary> dicOpt = dicRepo.findById(categoryDictionary.getId());
         if (dicOpt.isPresent()){
-            dicRepo.save(dicOpt.get());
+            CategoryDictionary dbDic = dicOpt.get();
+            if (categoryDictionary.getCategory() != null) dbDic.setCategory(categoryDictionary.getCategory());
+            if (categoryDictionary.getCategoryId() != null) dbDic.setCategoryId(categoryDictionary.getCategoryId());
+            if (categoryDictionary.getCategoryParentId() != null) dbDic.setCategoryParentId(categoryDictionary.getCategoryParentId());
+            if (categoryDictionary.getStatus() != null) dbDic.setStatus(categoryDictionary.getStatus());
+            if (categoryDictionary.getCategoryTag() != null) dbDic.setCategoryTag(categoryDictionary.getCategoryTag());
+            dicRepo.save(dbDic);
+            alls.clear();
         }else
             throw new CategoryException(ErrorCodes.no_such_category);
     }
@@ -91,7 +100,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryDictionary getCategoryDictionary(Integer id) {
-        Optional<CategoryDictionary> dicOpt = Optional.ofNullable(dicRepo.findOne(id));
+        Optional<CategoryDictionary> dicOpt = Optional.ofNullable(dicRepo.findOne(String.valueOf(id)));
         if (dicOpt.isPresent())
             return dicOpt.get();
         else
@@ -101,13 +110,18 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public void createCategoryTag(CategoryTag categoryTag) {
         tagRepo.save(categoryTag);
+        alls.clear();
     }
 
     @Override
     public void updateCategoryTag(CategoryTag categoryTag) {
         Optional<CategoryTag> tagOpt = Optional.ofNullable(tagRepo.findOne(categoryTag.getId()));
         if (tagOpt.isPresent()){
-            tagRepo.save(tagOpt.get());
+            CategoryTag dbTag = tagOpt.get();
+            if (categoryTag.getTag() != null) dbTag.setTag(categoryTag.getTag());
+            if (categoryTag.getTagCode() != null) dbTag.setTagCode(categoryTag.getTagCode());
+            tagRepo.save(dbTag);
+            alls.clear();
         }else
             throw new CategoryException(ErrorCodes.no_such_category_tag);
     }
@@ -164,17 +178,24 @@ public class CategoryServiceImpl implements CategoryService {
         if (StringUtils.isBlank(propertiesValue))
             throw new CategoryException(ErrorCodes.init_category_tag_error);
 
-        tagRepo.delete(tagRepo.findAll());
-
-        tagRepo.save(Arrays.asList(propertiesValue.split(",")).stream().map(s -> {
+        for (String s : propertiesValue.split(",")) {
             String[] subject = s.split(":");
+            if (subject.length < 2) continue;
+            String tagCode = subject[0].trim();
+            String tagName = subject[1].trim();
 
-            CategoryTag tag = new CategoryTag();
-                tag.setTagCode(subject[0]);
-                tag.setTag(subject[1]);
-
-            return tag;
-        }).collect(Collectors.toList()));
+            Optional<CategoryTag> tagOpt = tagRepo.findByTagCode(tagCode);
+            if (tagOpt.isPresent()) {
+                CategoryTag dbTag = tagOpt.get();
+                dbTag.setTag(tagName);
+                tagRepo.save(dbTag);
+            } else {
+                CategoryTag tag = new CategoryTag();
+                tag.setTagCode(tagCode);
+                tag.setTag(tagName);
+                tagRepo.save(tag);
+            }
+        }
     }
 
     private Predicate buildCategoryDictionaryPredicate(Map<String, Object> params) {
@@ -187,11 +208,11 @@ public class CategoryServiceImpl implements CategoryService {
         if (params.containsKey("status"))
             builder.and(qCategoryDictionary.status.eq(Integer.parseInt((String) params.get("status"))));
         if (params.containsKey("category"))
-            builder.and(qCategoryDictionary.category.likeIgnoreCase(String.format("%%s%%", params.get("category"))));
+            builder.and(qCategoryDictionary.category.containsIgnoreCase((String) params.get("category")));
         if (params.containsKey("categoryTagCode"))
             builder.and(qCategoryDictionary.categoryTag.tagCode.eq((String)params.get("categoryTagCode")));
         if (params.containsKey("categoryParentId"))
-            builder.and(qCategoryDictionary.categoryParentId.eq(Integer.parseInt((String) params.get("categoryId"))));
+            builder.and(qCategoryDictionary.categoryParentId.eq(Integer.parseInt((String) params.get("categoryParentId"))));
 
         return builder;
     }
@@ -204,10 +225,10 @@ public class CategoryServiceImpl implements CategoryService {
         QCategoryTag qCategoryTag = categoryTag;
 
         if (params.containsKey("tag"))
-            builder.and(qCategoryTag.tag.likeIgnoreCase(String.format("%%s%%", params.get("tag"))));
+            builder.and(qCategoryTag.tag.containsIgnoreCase((String) params.get("tag")));
 
         if (params.containsKey("tagCode"))
-            builder.and(qCategoryTag.tagCode.likeIgnoreCase(String.format("%%s%%", params.get("tagCode"))));
+            builder.and(qCategoryTag.tagCode.containsIgnoreCase((String) params.get("tagCode")));
 
         return builder;
     }

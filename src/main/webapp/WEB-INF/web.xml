@@ -70,7 +70,7 @@
         <url-pattern>/</url-pattern>
     </servlet-mapping>
 
-    <!-- spring session
+    <!-- spring session -->
     <filter>
         <filter-name>springSessionRepositoryFilter</filter-name>
         <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
@@ -80,7 +80,7 @@
         <url-pattern>/*</url-pattern>
         <dispatcher>REQUEST</dispatcher>
         <dispatcher>ERROR</dispatcher>
-    </filter-mapping>-->
+    </filter-mapping>
 
     <!--url参数编码-->
     <filter>

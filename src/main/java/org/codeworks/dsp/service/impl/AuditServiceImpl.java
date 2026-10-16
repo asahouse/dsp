@@ -10,6 +10,7 @@ import org.codeworks.dsp.service.BesApiService;
 import org.codeworks.dsp.service.specification.MaterialSpecification;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,9 @@ import java.util.stream.Collectors;
  */
 @Service
 public class AuditServiceImpl implements AuditService {
+
+    @Value("${bes.api.active:false}")
+    private boolean isBesActive;
 
     @Autowired
     private MaterialRepository materialRepo;
@@ -78,13 +82,13 @@ public class AuditServiceImpl implements AuditService {
                 continue;
             }
 
-            // 物料所属活动缺少SiteId,进行退回
-            if (dbMaterial.getCampaign().getAnalysisSiteId() <= 0) {
+            // 物料缺少所属活动,进行退回
+            if (dbMaterial.getCampaign() == null) {
                 rejectMaterials.add(dbMaterial);
                 continue;
             }
 
-            // 分配送审
+            // 分配送审 / 审核通过
             if (auditMaterial.getReview().equals(AuditReview.eligible)) {
                 deliverMaterials.add(dbMaterial);
                 continue;
@@ -96,23 +100,34 @@ public class AuditServiceImpl implements AuditService {
     private void postAuditMaterial(List<Material> deliverMaterials){
         if (deliverMaterials.size() <= 0) return;
 
-        //发送百度送审
-        besApiService.addCreatives(deliverMaterials.stream().filter(
-            m -> m.getReview().equals(Review.pending)).collect(Collectors.toList()));
+        if (isBesActive) {
+            // 发送百度送审
+            besApiService.addCreatives(deliverMaterials.stream().filter(
+                m -> m.getReview().equals(Review.pending)).collect(Collectors.toList()));
 
-        besApiService.updateCreatives(deliverMaterials.stream().filter(
-            m -> m.getReview().equals(Review.updatePending)).collect(Collectors.toList()));
+            besApiService.updateCreatives(deliverMaterials.stream().filter(
+                m -> m.getReview().equals(Review.updatePending)).collect(Collectors.toList()));
 
-        //变更状态
-        List<Material> updateList = deliverMaterials.stream().map(m ->{
-            Material material = new Material();
-            BeanUtils.copyProperties(m, material);
-            material.setReview(Review.processing);
-            return material;
-        }).collect(Collectors.toList());
+            // 变更状态为等待ADX回调审核中
+            List<Material> updateList = deliverMaterials.stream().map(m ->{
+                Material material = new Material();
+                BeanUtils.copyProperties(m, material);
+                material.setReview(Review.processing);
+                return material;
+            }).collect(Collectors.toList());
 
-        //执行更新
-        updateMaterialsReview(updateList);
+            updateMaterialsReview(updateList);
+        } else {
+            // OpenRTB / 独立运行模式下，管理员审核通过直接流转为 eligible 状态，进入实时出价候选池
+            List<Material> updateList = deliverMaterials.stream().map(m ->{
+                Material material = new Material();
+                BeanUtils.copyProperties(m, material);
+                material.setReview(Review.eligible);
+                return material;
+            }).collect(Collectors.toList());
+
+            updateMaterialsReview(updateList);
+        }
     }
 
     private void rejectMaterial(List<Material> rejectMaterials){

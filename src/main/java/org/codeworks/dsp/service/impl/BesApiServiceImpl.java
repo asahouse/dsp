@@ -81,9 +81,9 @@ public class BesApiServiceImpl implements BesApiService {
             else {
                 int total = materialList.size();
                 int pageSize = 10;
-                int totalPages = (int) Math.ceil(total / pageSize);
+                int totalPages = (total + pageSize - 1) / pageSize;
                 for (int i = 0; i < totalPages; i++) {
-                    creativeBesApi.add(materialList.stream().limit(pageSize).skip(i * pageSize).collect(Collectors.toList()));
+                    creativeBesApi.add(materialList.stream().skip((long) i * pageSize).limit(pageSize).collect(Collectors.toList()));
                 }
             }
         }
@@ -96,10 +96,11 @@ public class BesApiServiceImpl implements BesApiService {
                 creativeBesApi.update(narrowMaterials(materialList));
             } else {
                 int total = materialList.size();
-                int totalPages = (int) Math.ceil(total / 10);
+                int pageSize = 10;
+                int totalPages = (total + pageSize - 1) / pageSize;
                 List<Material> materials = narrowMaterials(materialList);
                 for (int i = 0; i < totalPages; i++) {
-                    creativeBesApi.update(materials.stream().limit(10).skip(i * total).collect(Collectors.toList()));
+                    creativeBesApi.update(materials.stream().skip((long) i * pageSize).limit(pageSize).collect(Collectors.toList()));
                 }
             }
         }
@@ -156,13 +157,13 @@ public class BesApiServiceImpl implements BesApiService {
                 if (!resultIds.isEmpty())
                     advRepo.updateReview(Advertiser.Review.eligible, resultIds);
 
-                resp.getResponse().stream().filter(m -> m.getState().equals(BesAdvertiserAuditState.State.denied))
+                resp.getResponse().stream().filter(m -> m != null && BesAdvertiserAuditState.State.denied.equals(m.getState()))
                         .forEach(m -> {
-                            if (Optional.ofNullable(m).isPresent() && !m.getRefuseReason().isEmpty()) {
-                                String refuseReason = StringUtils.join(m.getRefuseReason(), "\n");
-                                advRepo.updateRefuseReason(refuseReason, m.getAdvertiserId());
-                                advRepo.updateReview(Advertiser.Review.ineligible, m.getAdvertiserId());
-                            }
+                            String refuseReason = (m.getRefuseReason() != null && !m.getRefuseReason().isEmpty())
+                                    ? StringUtils.join(m.getRefuseReason(), "\n")
+                                    : "ADX audit denied";
+                            advRepo.updateRefuseReason(refuseReason, m.getAdvertiserId());
+                            advRepo.updateReview(Advertiser.Review.ineligible, m.getAdvertiserId());
                         });
             }
         }
@@ -188,13 +189,13 @@ public class BesApiServiceImpl implements BesApiService {
                 if (!resultIds.isEmpty())
                     materialRepo.updateReview(Material.Review.eligible, resultIds);
 
-                resp.getResponse().stream().filter(m -> m.getState().equals(BesCreativeAuditState.State.denied))
+                resp.getResponse().stream().filter(m -> m != null && BesCreativeAuditState.State.denied.equals(m.getState()))
                         .forEach(m -> {
-                            if (Optional.of(m).isPresent() && !m.getRefuseReason().isEmpty()) {
-                                String refuseReason = StringUtils.join(m.getRefuseReason(), "\n");
-                                materialRepo.updateRefuseReason(refuseReason, m.getCreativeId());
-                                materialRepo.updateReview(Material.Review.ineligibleForAdx, m.getCreativeId());
-                            }
+                            String refuseReason = (m.getRefuseReason() != null && !m.getRefuseReason().isEmpty())
+                                    ? StringUtils.join(m.getRefuseReason(), "\n")
+                                    : "ADX audit denied";
+                            materialRepo.updateRefuseReason(refuseReason, m.getCreativeId());
+                            materialRepo.updateReview(Material.Review.ineligibleForAdx, m.getCreativeId());
                         });
 
             }
@@ -232,18 +233,49 @@ public class BesApiServiceImpl implements BesApiService {
             List<Advertiser> submits = advRepo.findByReviewIs(Advertiser.Review.waitingSubmit.toValue());
             List<Advertiser> modifies = advRepo.findByReviewIs(Advertiser.Review.waitingModify.toValue());
 
-            AdvertiserListBesResponse submitsRes = advertiserBesApi.add(submits);
-            AdvertiserListBesResponse modifyRes = advertiserBesApi.update(modifies);
+            List<BesAdvertiser> combine = new ArrayList<>();
 
-            List<BesAdvertiser> combine = submitsRes.getResponse();
-            combine.addAll(modifyRes.getResponse());
+            if (submits != null && !submits.isEmpty()) {
+                for (int i = 0; i < submits.size(); i += 5) {
+                    List<Advertiser> batch = submits.subList(i, Math.min(i + 5, submits.size()));
+                    try {
+                        AdvertiserListBesResponse submitsRes = advertiserBesApi.add(batch);
+                        if (submitsRes != null && submitsRes.getResponse() != null) {
+                            combine.addAll(submitsRes.getResponse());
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
 
-            Set<Integer> unduplicate = combine.stream().map(BesAdvertiser::getAdvertiserId).collect(Collectors.toSet());
-            unduplicate.forEach(id -> {
-                advRepo.updateReview(Advertiser.Review.processing, id);
-            });
+            if (modifies != null && !modifies.isEmpty()) {
+                for (int i = 0; i < modifies.size(); i += 5) {
+                    List<Advertiser> batch = modifies.subList(i, Math.min(i + 5, modifies.size()));
+                    try {
+                        AdvertiserListBesResponse modifyRes = advertiserBesApi.update(batch);
+                        if (modifyRes != null && modifyRes.getResponse() != null) {
+                            combine.addAll(modifyRes.getResponse());
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
 
-            return unduplicate.stream().collect(Collectors.toList());
+            if (!combine.isEmpty()) {
+                Set<Integer> unduplicate = combine.stream()
+                        .map(BesAdvertiser::getAdvertiserId)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toSet());
+                unduplicate.forEach(id -> {
+                    advRepo.updateReview(Advertiser.Review.processing, id);
+                });
+
+                return unduplicate.stream().collect(Collectors.toList());
+            }
+
+            return result;
         }else
             return result;
     }

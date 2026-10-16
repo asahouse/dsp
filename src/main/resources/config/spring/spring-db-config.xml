@@ -130,6 +130,7 @@
                 <prop key="hibernate.use_sql_comments">false</prop>
                 <!-- 在SessionFactory创建时，自动检查数据库结构，或者将数据库schema的DDL导出到数据库. 使用 create-drop时,在显式关闭SessionFactory时，将drop掉数据库schema.
                     取值 validate | update | create | create-drop <prop key="hibernate.hbm2ddl.auto"></prop> -->
+                <prop key="hibernate.hbm2ddl.auto">${HIBERNATE_HBM2DDL_AUTO:update}</prop>
                 <!--如果你的项目都是注解，此时就没必要扫描hbm了，禁用掉-->
                 <!--<prop key="hibernate.archive.autodetection">class</prop>-->
             </props>
@@ -158,7 +159,7 @@
         <!-- execution(modifiers-pattern? ret-type-pattern declaring-type-pattern?
             name-pattern(param-pattern) throws-pattern?) -->
         <aop:pointcut
-                expression="execution(* org.codeworks.dsp.service.impl.*.*(..)))"
+                expression="execution(* org.codeworks.dsp.service.impl.*.*(..))"
                 id="transactionManagerAdvicePointcut"/>
         <!-- 由于部分程序可能要控制在事务执行前后操作，所以要定义一个order值，方便控制 -->
         <aop:advisor order="10000" advice-ref="transactionManagerAdvice"

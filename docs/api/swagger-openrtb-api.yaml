@@ -1,0 +1,272 @@
+openapi: 3.0.3
+info:
+  title: DSP 广告投放与 OpenRTB 实时竞价系统 API
+  description: |
+    本规范定义了 DSP 系统对外提供的 OpenRTB 2.5 实时竞价出价接口、胜出核销接口，
+    以及广告主与广告活动管理核心接口规范。遵循 IAB OpenRTB 2.5 与 Prebid Server 标准。
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: 本地测试服务
+paths:
+  /v2/openrtb/bid:
+    post:
+      summary: OpenRTB 2.5 实时竞价接口
+      description: |
+        接收来自 Prebid Server 或 ADX 的出价请求。检索匹配的广告活动与物料，
+        若命中则返回带有动态宏 ${AUCTION_PRICE} 的出价响应；若未命中则返回 204 No Content。
+      operationId: processBid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BidRequest'
+      responses:
+        '200':
+          description: 出价成功，返回包含竞价价格与广告物料代码的决策结果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BidResponse'
+        '204':
+          description: 无意愿出价或无匹配候选（放弃出价）
+        '400':
+          description: 请求体格式错误或缺失必要字段
+
+  /v2/openrtb/win:
+    get:
+      summary: OpenRTB 2.5 胜出通知回执接口 (GET)
+      description: |
+        媒体端赢得拍卖并展示广告后触发。接收媒体端将 ${AUCTION_PRICE} 宏替换后的真实结算价格。
+        内置 Redis 分布式排他锁（防重计费）与日预算熔断检查。
+      operationId: processWinNoticeGet
+      parameters:
+        - name: bidid
+          in: query
+          required: true
+          description: 对应出价响应中的唯一出价标识
+          schema:
+            type: string
+            example: "bid-1744781290"
+        - name: price
+          in: query
+          required: true
+          description: 最终结算价（已替换 ${AUCTION_PRICE} 宏）
+          schema:
+            type: number
+            format: double
+            example: 1.85
+        - name: cid
+          in: query
+          required: false
+          description: 广告活动 ID
+          schema:
+            type: integer
+            example: 101
+      responses:
+        '200':
+          description: 胜出记录成功或重复通知被幂等忽略
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "recorded"
+                  bidId:
+                    type: string
+                    example: "bid-1744781290"
+                  winPrice:
+                    type: number
+                    example: 1.85
+
+    post:
+      summary: OpenRTB 2.5 胜出通知回执接口 (POST)
+      description: POST 方式的胜出回执接收，支持 Query 参数与空 Body
+      operationId: processWinNoticePost
+      parameters:
+        - name: bidid
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: price
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+        - name: cid
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 胜出记录成功
+
+  /v2/campaign:
+    get:
+      summary: 分页查询广告主的广告活动列表
+      operationId: listCampaigns
+      parameters:
+        - name: advId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 成功获取广告活动分页列表
+        '403':
+          description: 越权访问（当前登录用户非该广告主且非管理员）
+
+components:
+  schemas:
+    BidRequest:
+      type: object
+      required:
+        - id
+        - imp
+      properties:
+        id:
+          type: string
+          example: "req-abc-001"
+        imp:
+          type: array
+          items:
+            $ref: '#/components/schemas/Imp'
+        site:
+          type: object
+          properties:
+            id:
+              type: string
+            domain:
+              type: string
+        device:
+          type: object
+          properties:
+            ip:
+              type: string
+            ua:
+              type: string
+            make:
+              type: string
+            model:
+              type: string
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+        tmax:
+          type: integer
+          example: 200
+
+    Imp:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          example: "imp-1"
+        banner:
+          type: object
+          properties:
+            w:
+              type: integer
+              example: 300
+            h:
+              type: integer
+              example: 250
+            format:
+              type: array
+              items:
+                type: object
+                properties:
+                  w:
+                    type: integer
+                  h:
+                    type: integer
+        bidfloor:
+          type: number
+          format: double
+          example: 1.00
+        bidfloorcur:
+          type: string
+          example: "CNY"
+
+    BidResponse:
+      type: object
+      required:
+        - id
+        - seatbid
+      properties:
+        id:
+          type: string
+          example: "req-abc-001"
+        seatbid:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeatBid'
+        bidid:
+          type: string
+          example: "bid-1744781290"
+        cur:
+          type: string
+          example: "CNY"
+
+    SeatBid:
+      type: object
+      properties:
+        bid:
+          type: array
+          items:
+            $ref: '#/components/schemas/Bid'
+        seat:
+          type: string
+          example: "dsp-seat-1"
+
+    Bid:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "bid-1744781290"
+        impid:
+          type: string
+          example: "imp-1"
+        price:
+          type: number
+          format: double
+          example: 2.50
+        nurl:
+          type: string
+          example: "http://dsp.example.com/v2/openrtb/win?bidid=bid-1744781290&price=${AUCTION_PRICE}&cid=101"
+        adm:
+          type: string
+        crid:
+          type: string
+          example: "mat-201"
+        cid:
+          type: string
+          example: "101"
+        w:
+          type: integer
+          example: 300
+        h:
+          type: integer
+          example: 250

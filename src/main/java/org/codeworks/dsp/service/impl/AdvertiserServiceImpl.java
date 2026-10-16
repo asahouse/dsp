@@ -67,14 +67,16 @@ public class AdvertiserServiceImpl implements AdvertiserService {
         if (dbAdv.getReview().equals(Review.processing))
             throw new AdvertiserException(ErrorCodes.can_not_modify_qualification_advertiser);
 
+        boolean qualificationChanged = !this.isSameAdvertiserQualification(dbAdv, adv);
+
         BeanUtils.copyProperties(adv, dbAdv, "userName", "review", "balance", "createDate", "lastLoginDate");
 
         dbAdv.setReview(Review.pending);
         advRepo.save(dbAdv);
 
-        if (adv.getSendAdx().equals(Advertiser.SendAdx.yes)){
+        if (Advertiser.SendAdx.yes.equals(adv.getSendAdx())){
 
-            if (!this.isSameAdvertiserQualification(dbAdv, adv)) {
+            if (qualificationChanged) {
                 if (besApiService.updateAdvertiser(dbAdv)) {
                     dbAdv.setReview(Review.processing);
                 }else{
@@ -90,7 +92,13 @@ public class AdvertiserServiceImpl implements AdvertiserService {
 
     @Override
     public void deleteAdvertiser(Integer id) {
-        advRepo.delete(id);
+        if (id == null) return;
+        Optional<Advertiser> dbAdvOpt = advRepo.getById(id);
+        if (dbAdvOpt.isPresent()) {
+            Advertiser dbAdv = dbAdvOpt.get();
+            dbAdv.setStatus(Advertiser.Status.ineligible);
+            advRepo.save(dbAdv);
+        }
     }
 
     @Override
@@ -143,24 +151,31 @@ public class AdvertiserServiceImpl implements AdvertiserService {
         if (params.containsKey("status"))
             builder.and(qAdv.status.eq(Integer.valueOf((String) params.get("status"))));
         if (params.containsKey("userName"))
-            builder.and(qAdv.userName.likeIgnoreCase(String.format("%%s%%", params.get("userName"))));
+            builder.and(qAdv.userName.containsIgnoreCase((String) params.get("userName")));
         if (params.containsKey("email"))
-            builder.and(qAdv.email.likeIgnoreCase(String.format("%%s%%", params.get("email"))));
+            builder.and(qAdv.email.containsIgnoreCase((String) params.get("email")));
 
         return Optional.ofNullable(builder);
     }
 
     private Boolean isSameAdvertiserQualification(Advertiser A, Advertiser B){
-        StringBuffer dbQua = new StringBuffer();
+        if (A.getQualification() == null && B.getQualification() == null) return true;
+        if (A.getQualification() == null || B.getQualification() == null) return false;
+
+        StringBuilder dbQua = new StringBuilder();
         dbQua.append(A.getQualification().getCompanyName());
         dbQua.append(A.getQualification().getSiteName());
         dbQua.append(A.getQualification().getOfficialSite());
+        dbQua.append(A.getQualification().getLicence());
+        dbQua.append(A.getQualification().getTradeId());
         String dbQuaMD5 = DigestUtils.md5Hex(dbQua.toString());
 
-        StringBuffer qua = new StringBuffer();
+        StringBuilder qua = new StringBuilder();
         qua.append(B.getQualification().getCompanyName());
         qua.append(B.getQualification().getSiteName());
         qua.append(B.getQualification().getOfficialSite());
+        qua.append(B.getQualification().getLicence());
+        qua.append(B.getQualification().getTradeId());
         String quaMD5 = DigestUtils.md5Hex(qua.toString());
 
         return dbQuaMD5.equals(quaMD5);

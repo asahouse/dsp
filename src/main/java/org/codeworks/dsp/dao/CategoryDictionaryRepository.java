@@ -16,7 +16,7 @@ import java.util.Optional;
  * Created by benjaminkc on 16/10/19.
  */
 public interface CategoryDictionaryRepository extends
-        PagingAndSortingRepository<CategoryDictionary, Integer>, QueryDslPredicateExecutor<CategoryDictionary> {
+        PagingAndSortingRepository<CategoryDictionary, String>, QueryDslPredicateExecutor<CategoryDictionary> {
 
     @EntityGraph(value = "category.all", type = EntityGraph.EntityGraphType.FETCH)
     Optional<CategoryDictionary> findById(String id);

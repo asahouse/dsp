@@ -13,6 +13,7 @@ import org.codeworks.dsp.adx.bes.dto.response.creative.CreativeListBesResponse;
 import org.codeworks.dsp.adx.bes.dto.response.creative.CreativeModifiedTradeBesResponse;
 import org.codeworks.dsp.adx.bes.exception.BaiduEsApiException;
 import org.codeworks.dsp.model.entities.Material;
+import org.apache.commons.io.IOUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -75,7 +77,7 @@ public class CreativeBesApi extends BaseBesApi {
     }
 
     public CreativeModifiedTradeBesResponse getModifiedTradeMaterials(LocalDate startDate, LocalDate endDate) {
-        if (startDate.plusDays(7).isAfter(endDate))
+        if (startDate.plusDays(7).isBefore(endDate))
             throw new BaiduEsApiException("query maximum range is 7 days");
         CreativeGetAllBesRequest req = new CreativeGetAllBesRequest(startDate, endDate);
         ResponseEntity<CreativeModifiedTradeBesResponse> resp =
@@ -104,11 +106,10 @@ public class CreativeBesApi extends BaseBesApi {
                 besCreative.setCreativeUrl(m.getUrl());
             else {
                 try {
-                    URI pngURI = new URI(m.getUrl());
-                    byte[] pngBytes = FileUtils.readFileToByteArray(new File(pngURI));
+                    byte[] pngBytes = IOUtils.toByteArray(new URL(m.getUrl()));
                     besCreative.setBinaryData(pngBytes);
-                } catch (URISyntaxException e) {
-                } catch (IOException e) {
+                } catch (Exception e) {
+                    besCreative.setCreativeUrl(m.getUrl());
                 }
             }
             besCreative.setLandingPage(m.getLandingUrl());

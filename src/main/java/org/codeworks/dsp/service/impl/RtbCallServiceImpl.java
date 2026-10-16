@@ -193,20 +193,37 @@ public class RtbCallServiceImpl implements RtbCallService{
     @Override
     public void scheduleSyncCampaignsOnAllowDate() {
         if (isActive){
-
-            List<Campaign> campaigns = campaignRepo.findByStartDateBeforeAndEndDateAfterAndSync(
-                    LocalDate.now(), LocalDate.now(), Campaign.Sync.not.toValue());
+            LocalDate today = LocalDate.now();
+            List<Campaign> campaigns = campaignRepo.findActiveCampaignsOnDate(
+                    today, today, Campaign.Sync.not.toValue());
 
             try{
                 if (Optional.ofNullable(campaigns).isPresent() && !campaigns.isEmpty()){
                     achieveAndInputCategoryDictionary(campaigns);
-                    campaignRtbApi.sync(campaigns);
+                    RtbResponse resp = campaignRtbApi.sync(campaigns);
+                    if (resp != null && resp.getStatus() == HttpStatus.OK.value()){
+                        campaigns.forEach(c -> {
+                            c.setSync(Campaign.Sync.yet);
+                            campaignRepo.save(c);
+                        });
+                    }
+                }
+
+                // Item 4: 广告活动生命周期到期自动下架与关闭机制
+                List<Campaign> expiredCampaigns = campaignRepo.findExpiredCampaigns(today, Campaign.Sync.yet.toValue());
+                if (expiredCampaigns != null && !expiredCampaigns.isEmpty()) {
+                    List<Integer> expiredIds = expiredCampaigns.stream().map(Campaign::getId).collect(Collectors.toList());
+                    RtbResponse<RtbCampaign> delResp = campaignRtbApi.delete(expiredIds);
+                    if (delResp != null && delResp.getStatus() == HttpStatus.OK.value()) {
+                        expiredCampaigns.forEach(c -> {
+                            c.setSync(Campaign.Sync.not);
+                            campaignRepo.save(c);
+                        });
+                    }
                 }
             }catch (Exception ex) {
                 throw new RtbApiException(ErrorCodes.rtb_sync_error);
             }
-
-
         }
     }
 

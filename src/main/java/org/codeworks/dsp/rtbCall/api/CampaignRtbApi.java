@@ -54,8 +54,8 @@ public class CampaignRtbApi extends BaseRtbApi implements RtbApi<RtbCampaign, Ca
             RtbCampaign rtb = new RtbCampaign();
                 rtb.setId(campaign.getId());
                 rtb.setAdvdId(campaign.getAdvertiser().getId());
-                rtb.setBid(campaign.getBid());
-                rtb.setBudget(campaign.getBudget());
+                rtb.setBid(campaign.getBid() != null ? campaign.getBid().floatValue() : null);
+                rtb.setBudget(campaign.getBudget() != null ? campaign.getBudget().floatValue() : null);
 
                 rtb.setUserCategory(transformUserCategory(campaign.getCampaignObjectives()));
                 rtb.setMobileDevice(transformMobileDevice(campaign.getCampaignObjectives()));
@@ -64,16 +64,17 @@ public class CampaignRtbApi extends BaseRtbApi implements RtbApi<RtbCampaign, Ca
     }
 
     private RtbUserCategory transformUserCategory(Set<CampaignObjective> objectives){
-        RtbUserCategory userCategory = null;
-
-        if (!Optional.ofNullable(objectives).isPresent()) return userCategory;
+        if (objectives == null || objectives.isEmpty()) return null;
 
         List<CategoryDictionary> categoryDictionaries = objectives.stream()
-                .map(campaignObjective -> campaignObjective.getCategoryDictionary())
-                .filter(categoryDictionary -> categoryDictionary.getCategoryTag().getTagCode().equals("MASSES_TAG"))
+                .map(CampaignObjective::getCategoryDictionary)
+                .filter(Objects::nonNull)
+                .filter(categoryDictionary -> categoryDictionary.getCategoryTag() != null && "MASSES_TAG".equals(categoryDictionary.getCategoryTag().getTagCode()))
                 .collect(Collectors.toList());
 
-        if (categoryDictionaries.isEmpty()) return userCategory;
+        if (categoryDictionaries.isEmpty()) return null;
+
+        RtbUserCategory userCategory = new RtbUserCategory();
 
         //性别
         List<Integer> gens = getNode(200, 0, categoryDictionaries).stream().map(ct -> ct.getCategoryId()).collect(Collectors.toList());
@@ -95,16 +96,17 @@ public class CampaignRtbApi extends BaseRtbApi implements RtbApi<RtbCampaign, Ca
     }
 
     private RtbMobileDevice transformMobileDevice(Set<CampaignObjective> objectives){
-        RtbMobileDevice mobileDevice = null;
-
-        if (!Optional.ofNullable(objectives).isPresent()) return mobileDevice;
+        if (objectives == null || objectives.isEmpty()) return null;
 
         List<CategoryDictionary> categoryDictionaries = objectives.stream()
-                .map(campaignObjective -> campaignObjective.getCategoryDictionary())
-                .filter(categoryDictionary -> categoryDictionary.getCategoryTag().getTagCode().equals("MOBILE_DEVICE"))
+                .map(CampaignObjective::getCategoryDictionary)
+                .filter(Objects::nonNull)
+                .filter(categoryDictionary -> categoryDictionary.getCategoryTag() != null && "MOBILE_DEVICE".equals(categoryDictionary.getCategoryTag().getTagCode()))
                 .collect(Collectors.toList());
 
-        if (categoryDictionaries.isEmpty()) return mobileDevice;
+        if (categoryDictionaries.isEmpty()) return null;
+
+        RtbMobileDevice mobileDevice = new RtbMobileDevice();
 
         //营运商
         List<Integer> cars = getNode(1, 0, categoryDictionaries).stream().map(ct -> ct.getCategoryId()%10).collect(Collectors.toList());

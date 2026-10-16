@@ -203,11 +203,15 @@ public class CampaignServiceImpl implements CampaignService {
         if (params.containsKey("review"))
             builder.and(qCampaign.review.eq(Integer.parseInt((String) params.get("review"))));
         if (params.containsKey("name"))
-            builder.and(qCampaign.name.likeIgnoreCase(String.format("%%s%%", params.get("name"))));
+            builder.and(qCampaign.name.containsIgnoreCase((String) params.get("name")));
         if (params.containsKey("createTime between")) {
-            Optional<String> date = Optional.ofNullable((String) params.get("createTime between"));
-            Map<String, LocalDateTime> splitDate = this.splitStringToTime(date.get());
-            builder.and(qCampaign.createDate.between(splitDate.get("fromDate"), splitDate.get("toDate")));
+            String date = (String) params.get("createTime between");
+            if (StringUtils.isNotBlank(date)) {
+                Map<String, LocalDateTime> splitDate = this.splitStringToTime(date);
+                if (splitDate.containsKey("fromDate") && splitDate.containsKey("toDate")) {
+                    builder.and(qCampaign.createDate.between(splitDate.get("fromDate"), splitDate.get("toDate")));
+                }
+            }
         }
 
         return Optional.ofNullable(builder);
@@ -228,18 +232,21 @@ public class CampaignServiceImpl implements CampaignService {
 
     private Map<String, LocalDateTime> splitStringToTime(String date){
         Map<String, LocalDateTime> result = new HashMap<>();
-        if (StringUtils.isNotBlank(date) && date.indexOf("#")!=-1){
-            int index = date.indexOf("#");
-            String fromDateStr = date.substring(0, index);
-            String toDateStr = date.substring(index+1);
+        if (StringUtils.isNotBlank(date) && date.indexOf("#") != -1){
+            try {
+                int index = date.indexOf("#");
+                String fromDateStr = date.substring(0, index).trim();
+                String toDateStr = date.substring(index + 1).trim();
 
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-            LocalDateTime fromDate = LocalDateTime.parse(fromDateStr, formatter);
-            LocalDateTime toDate = LocalDateTime.parse(toDateStr, formatter);
+                LocalDateTime fromDate = LocalDateTime.parse(fromDateStr, formatter);
+                LocalDateTime toDate = LocalDateTime.parse(toDateStr, formatter);
 
-            result.put("fromDate",fromDate);
-            result.put("toDate",toDate);
+                result.put("fromDate", fromDate);
+                result.put("toDate", toDate);
+            } catch (Exception ignored) {
+            }
         }
         return result;
     }

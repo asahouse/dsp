@@ -31,15 +31,25 @@ public class LoginInterceptor extends AbstractController implements HandlerInter
         resp.setCharacterEncoding("UTF-8");
         resp.setHeader("content-type", "application/json;charset=UTF-8");
         if (adv != null) {
+            if (adv.getIsAdmin() != null && adv.getIsAdmin()) {
+                return true;
+            }
+
             if (StringUtils.isEmpty(req.getParameter("advId")))
                 return true;
             else {
-                if (adv.getId().equals(Integer.parseInt(req.getParameter("advId"))))
-                    return true;
-                else
+                try {
+                    if (adv.getId().equals(Integer.parseInt(req.getParameter("advId"))))
+                        return true;
+                    else
+                        resp.getWriter().write(
+                                objectMapper.writeValueAsString(
+                                        Response.resp(HttpStatus.FORBIDDEN, getMessage(ErrorCodes.permission_denied.getCode()))));
+                } catch (NumberFormatException e) {
                     resp.getWriter().write(
                             objectMapper.writeValueAsString(
-                                    Response.resp(HttpStatus.FORBIDDEN, getMessage(ErrorCodes.permission_denied.getCode()))));
+                                    Response.resp(HttpStatus.BAD_REQUEST, "Invalid advId parameter")));
+                }
             }
         } else
             resp.getWriter().write(

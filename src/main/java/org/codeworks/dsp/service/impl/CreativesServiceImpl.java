@@ -50,7 +50,7 @@ public class CreativesServiceImpl implements CreativesService {
             });
             materialRepo.save(materialList);
         } else
-            throw new CreativesException(ErrorCodes.no_such_category);
+            throw new CreativesException(ErrorCodes.no_such_campaign);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class CreativesServiceImpl implements CreativesService {
         Optional<Campaign> campaignOpt = campaignRepository.findWithAllByIdAndAdvertiserId(cId, advId);
         Optional<Advertiser> adverOpt = advRepo.getById(advId);
 
-        if (campaignOpt.isPresent() || adverOpt.isPresent()) {
+        if (campaignOpt.isPresent() && adverOpt.isPresent()) {
 
             List<Material> materialList = materials.getMaterials();
             for (int i = 0; i < materialList.size(); i++) {
@@ -92,7 +92,7 @@ public class CreativesServiceImpl implements CreativesService {
                 results.add(dbMaterial);
             }
         } else
-            throw new CreativesException(ErrorCodes.no_such_category);
+            throw new CreativesException(ErrorCodes.no_such_campaign);
 
         return results;
     }
@@ -104,7 +104,7 @@ public class CreativesServiceImpl implements CreativesService {
             Predicate predicate = buildMaterialPredicate(cId, params);
             return materialRepo.findAll(predicate, page);
         } else
-            throw new CreativesException(ErrorCodes.no_such_category);
+            throw new CreativesException(ErrorCodes.no_such_campaign);
     }
 
     @Override
@@ -133,14 +133,22 @@ public class CreativesServiceImpl implements CreativesService {
         if (params.containsKey("type"))
             builder.and(qMaterial.type.eq(Integer.valueOf((String) params.get("type"))));
         if (params.containsKey("size")) {
-            String[] size = ((String) params.get("size")).split("\\*");
-            builder.and(qMaterial.width.eq(Integer.valueOf(size[0])));
-            builder.and(qMaterial.height.eq(Integer.valueOf(size[1])));
+            String sizeStr = (String) params.get("size");
+            if (sizeStr != null && !sizeStr.trim().isEmpty()) {
+                String[] size = sizeStr.split("[*xX]");
+                if (size.length >= 2) {
+                    try {
+                        builder.and(qMaterial.width.eq(Integer.valueOf(size[0].trim())));
+                        builder.and(qMaterial.height.eq(Integer.valueOf(size[1].trim())));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+            }
         }
         if (params.containsKey("name"))
-            builder.and(qMaterial.name.likeIgnoreCase(String.format("%%s%%", params.get("name"))));
+            builder.and(qMaterial.name.containsIgnoreCase((String) params.get("name")));
         if (params.containsKey("landingUrl"))
-            builder.and(qMaterial.landingUrl.likeIgnoreCase(String.format("%%s%%", params.get("landingUrl"))));
+            builder.and(qMaterial.landingUrl.containsIgnoreCase((String) params.get("landingUrl")));
 
         return builder;
     }

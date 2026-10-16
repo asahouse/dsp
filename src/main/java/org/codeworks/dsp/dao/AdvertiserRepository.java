@@ -46,4 +46,8 @@ public interface AdvertiserRepository extends
     @Modifying
     @Query("update Advertiser adv set adv.refuseReason = ?1 where adv.id = ?2")
     void updateRefuseReason(String refuseReason, int id);
+
+    @Modifying(clearAutomatically = true)
+    @Query("update Advertiser adv set adv.balance = adv.balance - ?1 where adv.id = ?2 and adv.balance >= ?1")
+    int deductBalance(Double cost, Integer id);
 }

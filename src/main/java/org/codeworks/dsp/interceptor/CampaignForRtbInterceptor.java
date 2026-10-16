@@ -58,14 +58,12 @@ public class CampaignForRtbInterceptor {
 
         //是否修改了<bid,budget,startData,endData,是否在允许时间区间内>
         if (Optional.ofNullable(orginCampaign.getId()).isPresent()){
-            //boolean bidCondi = !(Float.floatToIntBits(orginCampaign.getBid()) == Float.floatToIntBits(modCampaign.getBid()));
-            BigDecimal orginBid = new BigDecimal(Float.toString(orginCampaign.getBid()));
-            BigDecimal modBid = new BigDecimal(Float.toString(modCampaign.getBid()));
+            BigDecimal orginBid = orginCampaign.getBid() != null ? BigDecimal.valueOf(orginCampaign.getBid()) : BigDecimal.ZERO;
+            BigDecimal modBid = modCampaign.getBid() != null ? BigDecimal.valueOf(modCampaign.getBid()) : BigDecimal.ZERO;
             boolean bidCondi = orginBid.compareTo(modBid) != 0;
 
-            //boolean budgetCondi = !(Float.floatToIntBits(orginCampaign.getBudget()) == Float.floatToIntBits(modCampaign.getBudget()));
-            BigDecimal orginBudget = new BigDecimal(Float.toString(orginCampaign.getBudget()));
-            BigDecimal modBugget = new BigDecimal(Float.toString(modCampaign.getBudget()));
+            BigDecimal orginBudget = orginCampaign.getBudget() != null ? BigDecimal.valueOf(orginCampaign.getBudget()) : BigDecimal.ZERO;
+            BigDecimal modBugget = modCampaign.getBudget() != null ? BigDecimal.valueOf(modCampaign.getBudget()) : BigDecimal.ZERO;
             boolean budgetCondi = orginBudget.compareTo(modBugget) != 0;
 
             boolean startCondi = !orginCampaign.getStartDate().isEqual(modCampaign.getStartDate());
