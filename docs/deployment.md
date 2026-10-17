@@ -38,11 +38,12 @@ mvn clean package -DskipTests
 ### 3.2 执行端到端（E2E）集成测试
 项目包含端到端完整测试套件，可直接通过 Maven 执行：
 ```bash
-mvn test -Dtest=DspComprehensiveE2ETest,OpenRtbBiddingE2ETest \
+mvn test "-Dtest=DspComprehensiveE2ETest,OpenRtbBiddingE2ETest,OpenRtbAdvancedFeaturesE2ETest" \
   -DLOCAL_JDBC_HOST=localhost \
   -DREDIS_HOST=localhost \
   -DRABBITMQ_HOST=localhost
 ```
+详情可参考：[端到端测试与质量保障指南](testing-guide.md)。
 
 ---
 
