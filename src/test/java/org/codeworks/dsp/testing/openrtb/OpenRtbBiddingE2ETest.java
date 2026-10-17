@@ -226,8 +226,8 @@ public class OpenRtbBiddingE2ETest {
         imp.setBidfloor(1.00);
 
         Banner banner = new Banner();
-        banner.setW(728);
-        banner.setH(90); // 媒体要求 728x90，我们只有 300x250
+        banner.setW(9999);
+        banner.setH(9999); // 媒体要求 9999x9999 尺寸，系统内不存在该尺寸素材
         imp.setBanner(banner);
 
         req.setImp(Collections.singletonList(imp));

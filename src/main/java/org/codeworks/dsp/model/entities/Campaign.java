@@ -107,6 +107,51 @@ public class Campaign extends BaseEntity implements Serializable {
     @Column(name = "analysisSiteId")
     private Integer analysisSiteId;
 
+    /**
+     * 消耗模式: EVEN (平滑匀速), ASAP (尽快跑量)
+     */
+    @JsonView(ListView.class)
+    @Column(name = "pacingMode", length = 20)
+    private String pacingMode = "EVEN";
+
+    /**
+     * 单用户每日频控上限, 0 表示不限制
+     */
+    @JsonView(ListView.class)
+    @Column(name = "freqCapDaily")
+    private Integer freqCapDaily = 0;
+
+    /**
+     * 单用户每小时频控上限, 0 表示不限制
+     */
+    @JsonView(ListView.class)
+    @Column(name = "freqCapHourly")
+    private Integer freqCapHourly = 0;
+
+    public String getPacingMode() {
+        return pacingMode != null ? pacingMode : "EVEN";
+    }
+
+    public void setPacingMode(String pacingMode) {
+        this.pacingMode = pacingMode;
+    }
+
+    public Integer getFreqCapDaily() {
+        return freqCapDaily != null ? freqCapDaily : 0;
+    }
+
+    public void setFreqCapDaily(Integer freqCapDaily) {
+        this.freqCapDaily = freqCapDaily;
+    }
+
+    public Integer getFreqCapHourly() {
+        return freqCapHourly != null ? freqCapHourly : 0;
+    }
+
+    public void setFreqCapHourly(Integer freqCapHourly) {
+        this.freqCapHourly = freqCapHourly;
+    }
+
     public Integer getId() {
         return id;
     }

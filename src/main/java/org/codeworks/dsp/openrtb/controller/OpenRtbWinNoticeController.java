@@ -55,12 +55,14 @@ public class OpenRtbWinNoticeController {
             @ApiParam(value = "投放活动 ID", required = false)
             @RequestParam(required = false) Integer campaignId,
             @ApiParam(value = "胜出素材 ID", required = false)
-            @RequestParam(required = false) Integer materialId) {
+            @RequestParam(required = false) Integer materialId,
+            @ApiParam(value = "受众/设备用户标识 (用于频控)", required = false)
+            @RequestParam(required = false) String userId) {
 
-        logger.info("Received Win Notice: bidId={}, price={}, advId={}, campaignId={}, materialId={}",
-                bidId, price, advId, campaignId, materialId);
+        logger.info("Received Win Notice: bidId={}, price={}, advId={}, campaignId={}, materialId={}, userId={}",
+                bidId, price, advId, campaignId, materialId, userId);
 
-        boolean success = biddingService.handleWinNotice(bidId, price, advId, campaignId, materialId);
+        boolean success = biddingService.handleWinNotice(bidId, price, advId, campaignId, materialId, userId);
 
         Map<String, Object> result = new HashMap<>();
         result.put("status", success ? "success" : "ignored");

@@ -12,6 +12,11 @@
 ## 核心特性
 
 * **实时竞价引擎 (OpenRTB 2.5 / Prebid Server)**：毫秒级多维度条件过滤（排期、定向、尺寸、底价），支持 `${AUCTION_PRICE}` 第二价格动态宏替换与 HTTP 204 快速放弃出价机制。
+* **预竞价反作弊风控 (Pre-bid Anti-Fraud)**：内置机房 IDC 网段（AWS, GCP, 阿里云, 腾讯云等 29 个 CIDR）纳秒级位运算拦截、恶意爬虫/自动化 Bot UA 正则过滤及 Redis 动态 IP 黑名单。
+* **受众精细化展示频控 (Frequency Capping)**：基于硬件设备 IFA、用户标识或网络特征构建唯一受众标识，支持活动天/小时双时间窗口原子频控。
+* **平滑预算消耗调度 (Budget Pacing)**：支持 `ASAP` 冲刺跑量与 `EVEN` 均摊平滑消耗模式，依托动态概率节流算法（Probabilistic Throttling）杜绝开盘瞬间预算超支。
+* **多媒体创意多格式支持 (Video / Native)**：原生支持标准 Banner HTML、IAB VAST 3.0 视频广告 XML 组装与 IAB OpenRTB Native 1.2 原生信息流 JSON 资产生成。
+* **点击追踪与 S2S 效果转化归因 (Attribution)**：提供 `/v2/openrtb/click` 302 重定向落地页跳转与 `/v2/openrtb/conversion` 服务端回传，结合 Redis 防重排重与 RabbitMQ 异步削峰事件投递。
 * **高并发预算熔断与防重核销**：基于 Redis 原子操作实现实时日预算熔断（防止并发超卖），结合分布式排他锁实现胜出通知幂等防重计费。
 * **多层级权限与安全隔离**：全系统严格防垂直/水平越权控制，强制执行广告主资质认证拦截（未过审禁止投放），敏感数据脱敏展示。
 * **标准 API 文档化 (Swagger / OpenAPI)**：集成 Springfox Swagger 2.9.2，全量核心控制器添加规范化注解与在线交互调试。
@@ -29,8 +34,8 @@
 
 ### 2. 构建与运行测试
 ```bash
-# 编译并执行完整端到端测试套件（含 OpenRTB 真实竞价链路与并发防超卖验证）
-mvn test -Dtest=DspComprehensiveE2ETest,OpenRtbBiddingE2ETest
+# 编译并执行完整端到端测试套件（含业务全链路、OpenRTB 基础与 Phase 1 & 2 进阶特性）
+mvn test -Dtest=DspComprehensiveE2ETest,OpenRtbBiddingE2ETest,OpenRtbAdvancedFeaturesE2ETest
 
 # 打包 WAR
 mvn clean package -DskipTests

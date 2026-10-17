@@ -28,4 +28,17 @@ public interface OpenRtbBiddingService {
      * @return 扣费与处理结果
      */
     boolean handleWinNotice(String bidId, Double price, Integer advId, Integer campaignId, Integer materialId);
+
+    /**
+     * 处理竞价胜出通知（包含用户标识，用于用户频控计数与平滑消耗记账）
+     * @param bidId 竞价标识
+     * @param price 结算第二价格（CPM）
+     * @param advId 广告主ID
+     * @param campaignId 活动ID
+     * @param materialId 素材ID
+     * @param userId 唯一受众/设备用户标识 (IFA/UID/IPUA)
+     * @return 扣费与处理结果
+     */
+    boolean handleWinNotice(String bidId, Double price, Integer advId, Integer campaignId, Integer materialId, String userId);
 }
+
