@@ -134,11 +134,16 @@ public class AntiFraudFilter {
         }
 
         String cleanIp = ip.trim();
+        // 兼容处理 X-Forwarded-For 代理链 IP (提取首个真实客户端公网 IP)
+        if (cleanIp.contains(",")) {
+            cleanIp = cleanIp.split(",")[0].trim();
+        }
 
-        // 2. Redis 动态黑名单检测
+        // 2. Redis 动态黑名单检测 (双键兼容检查 antifraud / openrtb 命名空间)
         if (stringRedisTemplate != null) {
             try {
-                Boolean isBlacklisted = stringRedisTemplate.hasKey("openrtb:blacklist:ip:" + cleanIp);
+                Boolean isBlacklisted = stringRedisTemplate.hasKey("antifraud:blacklist:ip:" + cleanIp)
+                        || stringRedisTemplate.hasKey("openrtb:blacklist:ip:" + cleanIp);
                 if (Boolean.TRUE.equals(isBlacklisted)) {
                     logger.debug("Anti-fraud rejected blacklisted IP: {}", cleanIp);
                     return true;

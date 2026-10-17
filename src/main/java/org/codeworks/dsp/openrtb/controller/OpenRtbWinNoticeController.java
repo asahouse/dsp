@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -44,7 +45,7 @@ public class OpenRtbWinNoticeController {
     @ApiResponses({
             @ApiResponse(code = 200, message = "胜出通知已成功处理或幂等忽略重复通知")
     })
-    @GetMapping(path = {"/openrtb2/win", "/v2/rtb/win"})
+    @RequestMapping(path = {"/openrtb2/win", "/v2/openrtb/win", "/v2/rtb/win"}, method = {RequestMethod.GET, RequestMethod.POST})
     public ResponseEntity<Map<String, Object>> winNotice(
             @ApiParam(value = "出价唯一标识 (用于幂等去重)", required = true)
             @RequestParam(required = false) String bidId,

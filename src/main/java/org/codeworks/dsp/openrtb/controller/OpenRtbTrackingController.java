@@ -31,6 +31,10 @@ public class OpenRtbTrackingController {
     @Autowired
     private OpenRtbTrackingService trackingService;
 
+    public void setTrackingService(OpenRtbTrackingService trackingService) {
+        this.trackingService = trackingService;
+    }
+
     /**
      * 广告点击打点跳转端点
      * 用户点击广告时触发，服务端生成唯一 click_id 存入 Redis 并以 HTTP 302 重定向至广告主落地页
@@ -62,7 +66,17 @@ public class OpenRtbTrackingController {
         String targetUrl = trackingService.recordClick(bidId, campaignId, advId, materialId, redirect);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create(targetUrl));
+        try {
+            headers.setLocation(URI.create(targetUrl));
+        } catch (Exception e) {
+            try {
+                java.net.URL url = new java.net.URL(targetUrl);
+                URI uri = new URI(url.getProtocol(), url.getUserInfo(), url.getHost(), url.getPort(), url.getPath(), url.getQuery(), url.getRef());
+                headers.setLocation(uri);
+            } catch (Exception ex) {
+                headers.setLocation(URI.create("https://www.example.com"));
+            }
+        }
         return new ResponseEntity<>(headers, HttpStatus.FOUND);
     }
 
@@ -92,17 +106,45 @@ public class OpenRtbTrackingController {
     }
 
     /**
-     * 广告主 S2S 转化回传端点 (POST 协议)
+     * 广告主 S2S 转化回传端点 (POST 协议，支持表单或 JSON Body)
      */
-    @ApiOperation(value = "S2S 转化回传归因 (POST)", notes = "支持 POST 表单或请求体回传转化事件")
+    @ApiOperation(value = "S2S 转化回传归因 (POST)", notes = "支持 POST 表单或 JSON RequestBody 回传转化事件")
     @PostMapping(path = {"/openrtb2/conversion", "/v2/openrtb/conversion", "/v2/rtb/conversion"})
     public ResponseEntity<Map<String, Object>> conversionPost(
-            @ApiParam(value = "点击唯一令牌 (click_id)", required = true)
+            @ApiParam(value = "JSON 请求体 (支持 application/json)", required = false)
+            @RequestBody(required = false) Map<String, Object> body,
+            @ApiParam(value = "点击唯一令牌 (click_id)", required = false)
             @RequestParam(value = "click_id", required = false) String clickId,
             @ApiParam(value = "转化业务类型", required = false, defaultValue = "purchase")
             @RequestParam(value = "conv_type", required = false, defaultValue = "purchase") String convType,
             @ApiParam(value = "订单交易金额", required = false, defaultValue = "0.0")
             @RequestParam(value = "order_amount", required = false, defaultValue = "0.0") Double orderAmount) {
+
+        if (body != null) {
+            if (body.containsKey("click_id")) {
+                clickId = String.valueOf(body.get("click_id"));
+            } else if (body.containsKey("clickId")) {
+                clickId = String.valueOf(body.get("clickId"));
+            }
+            if (body.containsKey("conv_type")) {
+                convType = String.valueOf(body.get("conv_type"));
+            } else if (body.containsKey("convType")) {
+                convType = String.valueOf(body.get("convType"));
+            }
+            if (body.containsKey("order_amount")) {
+                try {
+                    orderAmount = Double.valueOf(String.valueOf(body.get("order_amount")));
+                } catch (Exception ignored) {}
+            } else if (body.containsKey("orderAmount")) {
+                try {
+                    orderAmount = Double.valueOf(String.valueOf(body.get("orderAmount")));
+                } catch (Exception ignored) {}
+            } else if (body.containsKey("amount")) {
+                try {
+                    orderAmount = Double.valueOf(String.valueOf(body.get("amount")));
+                } catch (Exception ignored) {}
+            }
+        }
 
         Map<String, Object> result = trackingService.attributeConversion(clickId, convType, orderAmount);
         return ResponseEntity.ok(result);

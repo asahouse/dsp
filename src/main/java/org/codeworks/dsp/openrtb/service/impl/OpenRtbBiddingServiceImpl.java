@@ -287,6 +287,13 @@ public class OpenRtbBiddingServiceImpl implements OpenRtbBiddingService {
                     + "&materialId=" + winningMaterial.getId()
                     + encodedUserId;
 
+            if (winningMaterial.getCampaign() == null) {
+                winningMaterial.setCampaign(winningCampaign);
+            }
+            if (winningMaterial.getAdvertiser() == null) {
+                winningMaterial.setAdvertiser(winningCampaign.getAdvertiser());
+            }
+
             String adm = winningMaterial.renderAdm("${AUCTION_PRICE}", bidId, nurl);
 
             if (userId != null) {

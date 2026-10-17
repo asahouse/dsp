@@ -42,7 +42,7 @@ public class OpenRtbBidController {
             @ApiResponse(code = 204, message = "无竞价响应 (NO_BID)，广告位不匹配或活动预算已耗尽"),
             @ApiResponse(code = 400, message = "请求报文非法或缺少必要 ID 字段")
     })
-    @PostMapping(path = {"/openrtb2/bid", "/v2/rtb/bid"})
+    @PostMapping(path = {"/openrtb2/bid", "/v2/openrtb/bid", "/v2/rtb/bid"})
     public ResponseEntity<?> bid(
             @ApiParam(value = "OpenRTB 2.5 BidRequest 请求体", required = true)
             @RequestBody BidRequest request) {

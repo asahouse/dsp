@@ -16,6 +16,7 @@ import org.codeworks.dsp.openrtb.dto.request.User;
 import org.codeworks.dsp.openrtb.dto.request.Video;
 import org.codeworks.dsp.openrtb.dto.response.Bid;
 import org.codeworks.dsp.openrtb.dto.response.BidResponse;
+import org.codeworks.dsp.openrtb.controller.OpenRtbTrackingController;
 import org.codeworks.dsp.openrtb.service.OpenRtbBiddingService;
 import org.codeworks.dsp.openrtb.service.OpenRtbTrackingService;
 import org.junit.Assert;
@@ -23,6 +24,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -55,6 +58,8 @@ public class OpenRtbAdvancedFeaturesE2ETest {
     @Autowired
     private OpenRtbTrackingService trackingService;
 
+    private OpenRtbTrackingController trackingController;
+
     @Autowired
     private AdvertiserRepository advertiserRepository;
 
@@ -76,6 +81,9 @@ public class OpenRtbAdvancedFeaturesE2ETest {
 
     @Before
     public void setUp() {
+        trackingController = new OpenRtbTrackingController();
+        trackingController.setTrackingService(trackingService);
+
         String rand = String.valueOf(System.currentTimeMillis() % 10000000L);
 
         // 创建测试资质与广告主
@@ -417,6 +425,27 @@ public class OpenRtbAdvancedFeaturesE2ETest {
         // 4. 模拟未知非法 click_id 转化回传
         Map<String, Object> unattrResult = trackingService.attributeConversion("clk-non-existent-token", "purchase", 50.0);
         Assert.assertEquals("unattributed", unattrResult.get("status"));
+
+        // 5. 模拟广告主通过 HTTP POST JSON Body 回传转化 (OpenRtbTrackingController.conversionPost)
+        String freshRedirect = trackingService.recordClick("bid-fresh-post", cId, aId, mId, landingUrl);
+        String freshClickId = freshRedirect.substring(freshRedirect.indexOf("click_id=") + "click_id=".length());
+
+        Map<String, Object> jsonPayload = new HashMap<>();
+        jsonPayload.put("click_id", freshClickId);
+        jsonPayload.put("conv_type", "order");
+        jsonPayload.put("order_amount", 88.0);
+
+        ResponseEntity<Map<String, Object>> postResp = trackingController.conversionPost(jsonPayload, null, null, null);
+        Assert.assertEquals(HttpStatus.OK, postResp.getStatusCode());
+        Assert.assertEquals("success", postResp.getBody().get("status"));
+        Assert.assertEquals(freshClickId, postResp.getBody().get("clickId"));
+        Assert.assertEquals("order", postResp.getBody().get("convType"));
+        Assert.assertEquals(88.0, (Double) postResp.getBody().get("orderAmount"), 0.001);
+
+        // 重复提交相同 JSON Body -> 幂等防重拦截
+        ResponseEntity<Map<String, Object>> dupPostResp = trackingController.conversionPost(jsonPayload, null, null, null);
+        Assert.assertEquals(HttpStatus.OK, dupPostResp.getStatusCode());
+        Assert.assertEquals("duplicate", dupPostResp.getBody().get("status"));
     }
 
     private BidRequest createBannerBidRequest(String id, int w, int h, double bidfloor) {

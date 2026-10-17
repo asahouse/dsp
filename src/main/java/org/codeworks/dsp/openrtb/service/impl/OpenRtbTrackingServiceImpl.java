@@ -158,30 +158,41 @@ public class OpenRtbTrackingServiceImpl implements OpenRtbTrackingService {
 
         // 转化幂等排重 (防重复计费或重复归因)
         String dedupeKey = "openrtb:conv:lock:" + cleanClickId;
-        boolean acquired = false;
         if (stringRedisTemplate != null) {
             try {
                 Boolean lock = stringRedisTemplate.opsForValue().setIfAbsent(dedupeKey, "1");
                 if (Boolean.TRUE.equals(lock)) {
                     stringRedisTemplate.expire(dedupeKey, 7, TimeUnit.DAYS);
-                    acquired = true;
+                    inMemoryConvertedClicks.add(cleanClickId);
+                } else {
+                    // Redis 明确已存在此 lock，说明已被记录过，直接判定为重复转化
+                    result.put("status", "duplicate");
+                    result.put("clickId", cleanClickId);
+                    result.put("campaignId", ctx.campaignId);
+                    result.put("message", "Conversion already recorded for this click_id");
+                    logger.info("Ignored duplicate conversion from Redis for clickId={}", cleanClickId);
+                    return result;
                 }
             } catch (Exception e) {
                 logger.warn("Redis conversion lock failed, fallback to memory: {}", e.getMessage());
+                if (!inMemoryConvertedClicks.add(cleanClickId)) {
+                    result.put("status", "duplicate");
+                    result.put("clickId", cleanClickId);
+                    result.put("campaignId", ctx.campaignId);
+                    result.put("message", "Conversion already recorded for this click_id");
+                    logger.info("Ignored duplicate conversion from memory for clickId={}", cleanClickId);
+                    return result;
+                }
             }
-        }
-
-        if (!acquired) {
+        } else {
             if (!inMemoryConvertedClicks.add(cleanClickId)) {
                 result.put("status", "duplicate");
                 result.put("clickId", cleanClickId);
                 result.put("campaignId", ctx.campaignId);
                 result.put("message", "Conversion already recorded for this click_id");
-                logger.info("Ignored duplicate conversion for clickId={}", cleanClickId);
+                logger.info("Ignored duplicate conversion from memory for clickId={}", cleanClickId);
                 return result;
             }
-        } else {
-            inMemoryConvertedClicks.add(cleanClickId);
         }
 
         // 累加转化量与转化金额

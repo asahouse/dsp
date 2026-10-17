@@ -210,11 +210,20 @@ public class Material extends BaseEntity implements Serializable {
             return rendered;
         }
 
-        String click = (this.landingUrl != null) ? this.landingUrl : "#";
+        String rawLanding = (this.landingUrl != null) ? this.landingUrl : "#";
+        String resolvedBidId = (bidId != null) ? bidId : "bid-" + System.currentTimeMillis();
+        String click = rawLanding;
+        if (!"#".equals(rawLanding)) {
+            String clickPrefix = "/openrtb2/click?bidId=" + resolvedBidId
+                    + (this.campaign != null && this.campaign.getId() != null ? "&campaignId=" + this.campaign.getId() : "")
+                    + (this.advertiser != null && this.advertiser.getId() != null ? "&advId=" + this.advertiser.getId() : "")
+                    + (this.id != null ? "&materialId=" + this.id : "")
+                    + "&redirect=";
+            click = clickPrefix + rawLanding;
+        }
         String mediaUrl = (this.url != null) ? this.url : "";
         int w = (this.width != null) ? this.width : 300;
         int h = (this.height != null) ? this.height : 250;
-        String resolvedBidId = (bidId != null) ? bidId : "bid-" + System.currentTimeMillis();
 
         if ("VIDEO".equalsIgnoreCase(this.creativeType)) {
             // 组装 IAB 标准 VAST 3.0 XML
